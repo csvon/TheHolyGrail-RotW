@@ -6,6 +6,10 @@ Built with **Electron**, **React**, and **TypeScript**.
 > **Modified by PyroSplat** – includes persistence, badges, and UI tweaks.
 
 ---
+<!-- Hero / App Overview Screenshot -->
+<p align="center">
+  <img src="docs/images/app-hero.png" alt="Holy Grail App Overview" width="900"/>
+</p>
 
 ## ✨ Features
 
@@ -27,23 +31,23 @@ For more info about the original project, see **[holygrail.link](https://holygra
 ## 🧰 How to enable persistence
 
 1. Open **Settings** (gear icon in the top bar).  
-   _Screenshot placeholder:_  
+   _Screenshot settings:_  
    ![Open Settings](docs/images/settings-open.png "Open Settings")
 
 2. Toggle **Persist found on drop**.  
-   _Screenshot placeholder:_  
+   _Screenshot: enable persistence toggle:_  
    ![Persist found on drop toggle](docs/images/persist-toggle.png "Enable persistence")
 
 3. When enabled:
    - Items you’ve found before show a **“Previously found”** badge and a **grey check**.
    - These items **count toward your grail totals** and are **hidden by “Only missing”**.
 
-   _Screenshot: badges in the list view_  
+   _Screenshot: badges in the list view:_  
    ![Previously found badge and grey check](docs/images/previously-found-badge.png "‘Previously found’ badge + grey check")
 
 4. To remove historical counts/badges:
    - Click **Clear persistent history…** in Settings and confirm.  
-     _Screenshot placeholder:_  
+     _Screenshot: clearing persistent data:_ 
      ![Clear persistent history](docs/images/clear-history.png "Clear persistence with confirmation")
 
 > Tip: Persistence is great if you mule/sell items but still want credit for prior drops.

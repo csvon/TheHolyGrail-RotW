@@ -48,8 +48,7 @@ For more info about the original project, see **[holygrail.link](https://holygra
 4. To remove historical counts/badges:
    - Click **Clear persistent history…** in Settings and confirm.  
    _Screenshot: clearing persistent data:_ 
-   ![Clear persistent history](docs/images/clear-history.png 
-   "Clear persistence with confirmation")
+   ![Clear persistent history](docs/images/clear-history.png "Clear persistence with confirmation")
 
 > Tip: Persistence is great if you mule/sell items but still want credit for prior drops.
 

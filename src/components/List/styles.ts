@@ -1,5 +1,14 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
 
+/* RUNE FONT HELPER */
+export const runeFontFamily = `'D2Runes', 'Diablo', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif`;
+
+export const RuneChar = styled.span`
+  font-family: ${runeFontFamily};
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.02em;
+`;
 export const Container = styled.div`
   padding: 15px;
   

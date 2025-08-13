@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>The Holy Grail
-  </title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>The Holy Grail</title>
   <style>
     /* latin-ext */
     @font-face {
@@ -97,28 +96,13 @@
       src: url('stream/Roboto-latin700.woff2') format('woff2');
       unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
     }
-    /* runes */
-    @font-face {
-      font-family: 'D2Runes';
-      font-style: normal;
-      font-weight: 300;
-      src: url('stream/D2Runes.ttf') format('truetype');
-    }
-    /* diablo-font */
-    @font-face {
-      font-family: 'Diablo';
-      font-style: normal;
-      src: url('stream/Exocet-Heavy.ttf') format('truetype');
-    }
-    /* diablo-font */
-    @font-face {
-      font-family: 'Diablo-Light';
-      font-style: normal;
-      src: url('stream/Exocet-Light.ttf') format('truetype');
-    }
+
+    /* NOTE: Removed D2Runes / Diablo / Diablo-Light @font-face.
+       These are now provided by src/styles/fonts.ts via <FontsGlobalStyle />. */
   </style>
 </head>
 <body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
 </body>
 </html>

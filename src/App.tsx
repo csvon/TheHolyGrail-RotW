@@ -3,7 +3,7 @@ import { GlobalStyle } from './styles/GlobalStyle'
 import { Greetings } from './components/Greetings'
 import { List } from './components/List'
 
-import { useState, useEffect, MouseEventHandler, useRef, createRef } from 'react';
+import { useState, useEffect, MouseEventHandler, useRef } from 'react';
 import { ThemeProvider } from '@mui/system';
 import { createTheme } from '@mui/material';
 import { toast, ToastContainer } from 'material-react-toastify';
@@ -12,6 +12,7 @@ import { FileReaderResponse, GameMode, ItemNotes, Settings } from './@types/main
 import defaultSettings from './utils/defaultSettings';
 import VersionCheck from './components/Settings/VersionCheck';
 import { useTranslation } from 'react-i18next';
+import { FontsGlobalStyle } from './styles/fonts'; // <-- added
 
 /* eslint-disable no-unused-vars */
 export enum UiState {
@@ -141,6 +142,7 @@ export function App() {
   return (
     <>
       <GlobalStyle />
+      <FontsGlobalStyle /> {/* <-- injected so D2Runes/Diablo fonts load globally */}
       <ThemeProvider theme={createTheme({palette: { mode: 'dark' }})}>
         <>
           <Greetings uiState={uiState} onFileClick={handleFileClick} onManualClick={handleManualClick} />

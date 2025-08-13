@@ -6,7 +6,7 @@ import WindowStateKeeper from "electron-window-state";
 import { fetchSilospen, getAllDropRates, runSilospenServer } from './lib/silospenDropCalculator'
 import itemsDatabase from './lib/items';
 import settingsStore from './lib/settings';
-import { setupStreamFeed, streamPort, updateDataToListeners } from './lib/stream';
+import { setupStreamFeed, streamPort, updateDataToListeners, updateSettingsToListeners } from './lib/stream';
 import { registerUpdateDownloader } from './lib/update';
 import { getEverFound, markEverFound, clearEverFound } from './lib/everFound';
 
@@ -92,98 +92,128 @@ async function registerListeners() {
   ipcMain.on('readFilesUponStart', (event) => {
     itemsDatabase.readFilesUponStart(event);
   });
+
   ipcMain.on('openFolderRequest', (event) => {
     itemsDatabase.openAndParseSaves(event);
   });
+
   ipcMain.on('openUrl', (_, url) => {
     shell.openExternal(url);
   });
+
   ipcMain.on('silospenRequest', (event, type, itemName) => {
     fetchSilospen(event, type, itemName);
   });
+
   ipcMain.on('getSetting', (event, key) => {
     event.returnValue = settingsStore.getSetting(key);
   });
+
   ipcMain.on('getSettings', (event) => {
     eventToReply = event;
     event.returnValue = settingsStore.getSettings();
   });
+
   ipcMain.on('saveSetting', (event, key, value) => {
     settingsStore.saveSetting(key, value);
+    // Broadcast settings change to stream overlays
+    updateSettingsToListeners();
+    // Persisted-history toggle affects counts → push data, too
+    if (key === 'persistFoundOnDrop') {
+      updateDataToListeners();
+    }
   });
+
   ipcMain.on('saveImage', (event, data: string) => {
     saveImage(data);
   });
+
   ipcMain.on('loadManualItems', (event) => {
     eventToReply = event;
     itemsDatabase.loadManualItems();
     event.reply('openFolder', itemsDatabase.getItems());
     updateDataToListeners();
   });
+
   ipcMain.on('saveManualItem', (event, itemId, count) => {
     eventToReply = event;
     itemsDatabase.saveManualItem(itemId, count);
-    markEverFound(itemId);
+    markEverFound(itemId); // normal item history
     itemsDatabase.fillInAvailableRunes();
     event.reply('openFolder', itemsDatabase.getItems());
     updateDataToListeners();
   });
+
   ipcMain.on('saveManualEthItem', (event, itemId, count) => {
     eventToReply = event;
     itemsDatabase.saveManualEthItem(itemId, count);
-    markEverFound(itemId + '#eth');
+    markEverFound(itemId + '#eth'); // eth history
     event.reply('openFolder', itemsDatabase.getItems());
     updateDataToListeners();
   });
+
+  // Optional: allow renderer to explicitly mark a drop as "ever found"
+  ipcMain.on('markFoundEver', (_event, itemId: string) => {
+    markEverFound(itemId);
+    updateDataToListeners();
+  });
+
   ipcMain.on('getAllDropRates', (event) => {
     eventToReply = event;
     getAllDropRates();
   });
+
   ipcMain.on('getStreamPort', (event) => {
     eventToReply = event;
     event.returnValue = streamPort;
   });
+
   ipcMain.on('getItemNotes', (event) => {
     eventToReply = event;
     itemsDatabase.getItemNotes().then((items) => event.reply('getItemNotes', items))
   });
+
   ipcMain.on('setItemNote', (event, itemName, note) => {
     eventToReply = event;
     itemsDatabase.setItemNote(itemName, note).then((items) => event.reply('getItemNotes', items))
   });
-  ipcMain.on('getEverFound', (event) => {
-  event.returnValue = getEverFound();
-});
 
-ipcMain.handle('confirmAndClearEverFound', async () => {
-  const { response } = await dialog.showMessageBox({
-    type: 'warning',
-    buttons: ['Cancel', 'Clear'],
-    defaultId: 0,
-    cancelId: 0,
-    title: 'Clear persistent history?',
-    message: 'This will remove all “Previously found” history.',
-    detail: 'Your stash will not be touched. This only clears the saved history used for showing the (Previously found) badge and counting those toward totals when enabled.',
-    noLink: true,
+  ipcMain.on('getEverFound', (event) => {
+    event.returnValue = getEverFound();
   });
 
-  if (response !== 1) return { cleared: false }; // user canceled
+  ipcMain.handle('confirmAndClearEverFound', async () => {
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['Cancel', 'Clear'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Clear persistent history?',
+      message: 'This will remove all “Previously found” history.',
+      detail: 'Your stash will not be touched. This only clears the saved history used for showing the (Previously found) badge and counting those toward totals when enabled.',
+      noLink: true,
+    });
 
-  await clearEverFound();
+    if (response !== 1) return { cleared: false }; // user canceled
 
-  // notify all windows so UI refreshes instantly
-  BrowserWindow.getAllWindows().forEach(win =>
-    win.webContents.send('everFoundCleared')
-  );
+    await clearEverFound();
 
-  return { cleared: true };
-});
+    // notify all windows so UI refreshes instantly
+    BrowserWindow.getAllWindows().forEach(win =>
+      win.webContents.send('everFoundCleared')
+    );
+
+    // and refresh streaming overlays
+    updateDataToListeners();
+
+    return { cleared: true };
+  });
 }
 
 app.whenReady()
   .then(async () => {
-    await registerListeners();   
-    createWindow();             
+    await registerListeners();
+    createWindow();
   })
   .catch(e => console.error(e));
 

@@ -1,5 +1,12 @@
 CHANGELOG:
 
+v.2.7.5 (New fork by PyroSplat)
+ - Theme and font changes 
+ - Added sundered charms 
+ - Added new feature to keep items marked as found after dropping
+ - Added badge to show "found previously"
+ - Added settings to toggle new feature and clear persistent storage 
+
 v.2.4.1
  - Fixes issue with fetching item droprate from Silospen website
 

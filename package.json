@@ -49,7 +49,7 @@
     "react-circle-flags": "^0.0.15",
     "react-circular-progressbar": "^2.0.4",
     "react-dom": "^18",
-    "react-hot-loader": "4.13.0",
+    "react-hot-loader": "4.13.1",
     "react-i18next": "^11.15.4",
     "request": "^2.88.2",
     "socket.io": "^4.4.1",
@@ -61,11 +61,11 @@
     "ts-deepmerge": "^2.0.3"
   },
   "devDependencies": {
-    "@babel/core": "7.17.4",
-    "@babel/plugin-transform-runtime": "7.17.0",
-    "@babel/preset-env": "7.16.11",
-    "@babel/preset-react": "7.16.7",
-    "@babel/preset-typescript": "7.16.7",
+    "@babel/core": "^7.28.3",
+    "@babel/plugin-transform-runtime": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
     "@electron-forge/cli": "^6",
     "@electron-forge/maker-deb": "6.0.0-beta.63",
     "@electron-forge/maker-rpm": "6.0.0-beta.63",
@@ -80,20 +80,21 @@
     "@types/mousetrap": "^1.6.9",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/styled-components": "5.1.22",
+    "@types/styled-components": "5.1.34",
     "@typescript-eslint/eslint-plugin": "5.12.0",
     "@typescript-eslint/parser": "5.12.0",
-    "babel-loader": "8.2.3",
+    "babel-loader": "^10.0.0",
     "copy-webpack-plugin": "^10.2.4",
     "cross-env": "7.0.3",
     "electron": "16.0.9",
+    "electron-builder": "^26.0.12",
     "eslint": "8.13.0",
     "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-import": "2.25.4",
+    "eslint-plugin-import": "2.32.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "eslint-plugin-promise": "6.0.0",
-    "eslint-plugin-react": "7.28.0",
+    "eslint-plugin-react": "7.37.5",
     "eslint-plugin-standard": "5.0.0",
     "file-loader": "^6.2.0",
     "jest": "27.5.1",
@@ -101,7 +102,8 @@
     "prettier": "2.5.1",
     "ts-jest": "27.1.3",
     "typescript": "4.5.5",
-    "wait-on": "6.0.1"
+    "wait-on": "6.0.1",
+    "webpack-cli": "^6.0.1"
   },
   "build": {
     "appId": "d2rHolyGrail",
@@ -166,5 +168,6 @@
         "darwin"
       ]
     }
-  ]
+  ],
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

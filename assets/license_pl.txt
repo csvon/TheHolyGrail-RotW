@@ -1,5 +1,12 @@
 LISTA ZMIAN:
 
+v.2.7.5 (Nowy fork autorstwa PyroSplat)
+ - Zmiany motywu i czcionki
+ - Dodano rozszczepione talizmany
+ - Dodano nową funkcję zachowywania znalezionych przedmiotów po ich upuszczeniu
+ - Dodano odznakę pokazującą „znaleziono wcześniej”
+ - Dodano ustawienia do włączania/wyłączania nowej funkcji i czyszczenia trwałego magazynu
+
 v.2.4.1
  - Naprawiono pobieranie danych z kalkulatora Silospen
 

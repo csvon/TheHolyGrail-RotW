@@ -1,5 +1,9 @@
 LISTA ZMIAN:
 
+v.2.7.6 (Poprawki błędów)
+ - Uzupełniono poprawne liczenie runewordów, aby uwzględniało wszystkie runewordy (D2R)/(Ladder)
+ - Naprawiono błąd polegający na nieprawidłowym wykrywaniu zmian w plikach przy dodawaniu, usuwaniu lub modyfikowaniu plików w katalogu zapisu gry
+
 v.2.7.5 (Nowy fork autorstwa PyroSplat)
  - Zmiany motywu i czcionki
  - Dodano rozszczepione talizmany

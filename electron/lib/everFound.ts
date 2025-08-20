@@ -42,7 +42,6 @@ export function markManyEverFound(ids: string[]) {
   if (changed) save(map);
 }
 
-// >>> ADD THIS <<<
 export async function clearEverFound(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     storage.remove('everFound', (err) => (err ? reject(err) : resolve()));

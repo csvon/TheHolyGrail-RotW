@@ -169,8 +169,8 @@ export const computeSubStats = (
 
   const runesExists = settings.grailRunes ? 33 : 0;
   const runewordsExists = settings.grailRunewords
-    ? settings.gameVersion === GameVersion.Resurrected ? 85 : 78
-    : 0;
+  ? (settings.gameVersion === GameVersion.Resurrected ? Object.keys(flat).length : 0)
+  : 0;
   const normalExists = settings.grailType !== GrailType.Ethereal ? Object.keys(normalFlat).length : 0;
   const etherealExists = settings.grailType === GrailType.Ethereal || settings.grailType === GrailType.Each
     ? Object.keys(ethFlat).length

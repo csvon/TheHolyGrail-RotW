@@ -78,7 +78,7 @@ function createWindow() {
     closeApp();
   });
 
-  registerUpdateDownloader(mainWindow);
+ // registerUpdateDownloader(mainWindow);
   setupStreamFeed();
   runSilospenServer();
 }
@@ -190,7 +190,7 @@ async function registerListeners() {
       cancelId: 0,
       title: 'Clear persistent history?',
       message: 'This will remove all “Previously found” history.',
-      detail: 'Your stash will not be touched. This only clears the saved history used for showing the (Previously found) badge and counting those toward totals when enabled.',
+      detail: 'Your stash will not be touched. This only clears the saved history (previously found) and counting those items toward the grail totals',
       noLink: true,
     });
 

@@ -216,25 +216,30 @@ class ItemsStore {
       setEventToReply(event);
     }
 
-    if (files.length) {
-      // if no file watcher is active
-      if (!this.fileWatcher) {
+    if (!this.fileWatcher) {
+      if (path) {
         this.watchPath = path;
-        this.fileWatcher = chokidar.watch(this.prepareChokidarGlobe(this.watchPath), {
-          followSymlinks: false,
+        this.fileWatcher = chokidar.watch(path, {
+          persistent: true,
           ignoreInitial: true,
           depth: 0,
-        }).on('all', () => {
+          awaitWriteFinish: {
+            stabilityThreshold: 200,
+            pollInterval: 100
+          }
+        }).on('add', () => {
+          this.filesChanged = true;
+        }).on('change', () => {
+          this.filesChanged = true;
+        }).on('unlink', () => {
           this.filesChanged = true;
         });
       }
-      // if file watcher is enabled, and directory changed
-      if (this.fileWatcher && this.watchPath && this.watchPath !== path) {
-        this.fileWatcher.unwatch(this.prepareChokidarGlobe(this.watchPath)).add(this.prepareChokidarGlobe(path));
-        this.watchPath = path;
-      }
+    } else if (this.watchPath !== path && path) {
+      this.fileWatcher.unwatch(this.watchPath!); // we assert it's non-null here
+      this.fileWatcher.add(path);
+      this.watchPath = path;
     }
-
     // prepare item list
     const settings = settingsStore.getSettings();
     const flatItems = flattenObject(getHolyGrailSeedData(settings, false), buildFlattenObjectCacheKey('all', settings));

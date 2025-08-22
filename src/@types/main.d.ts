@@ -90,7 +90,9 @@ export type Settings = {
   gameVersion: GameVersion,
   onlyMissing: boolean,
   enableSounds: boolean,
-  persistFoundOnDrop: boolean; // NEW
+  persistFoundOnDrop: boolean;
+  customSoundFile: string,
+  soundVolume: number, 
 }
 
 export type HolyGrailSeed = IHolyGrailData & {

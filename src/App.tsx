@@ -1,5 +1,4 @@
 import { GlobalStyle } from './styles/GlobalStyle'
-
 import { Greetings } from './components/Greetings'
 import { List } from './components/List'
 
@@ -12,7 +11,8 @@ import { FileReaderResponse, GameMode, ItemNotes, Settings } from './@types/main
 import defaultSettings from './utils/defaultSettings';
 import VersionCheck from './components/Settings/VersionCheck';
 import { useTranslation } from 'react-i18next';
-import { FontsGlobalStyle } from './styles/fonts'; // <-- added
+import { FontsGlobalStyle } from './styles/fonts';
+import { playGrailSound } from './utils/soundUtils';
 
 /* eslint-disable no-unused-vars */
 export enum UiState {
@@ -58,6 +58,20 @@ export function App() {
     if (typeof settings.gameVersion === 'undefined') {
       settings.gameVersion = defaultSettings.gameVersion;
     }
+    // Sound settings validation
+    if (typeof settings.enableSounds === 'undefined') {
+      settings.enableSounds = defaultSettings.enableSounds;
+    }
+    if (typeof settings.customSoundFile === 'undefined') {
+      settings.customSoundFile = defaultSettings.customSoundFile;
+    }
+    if (typeof settings.soundVolume === 'undefined') {
+      settings.soundVolume = defaultSettings.soundVolume;
+    }
+    if (typeof settings.persistFoundOnDrop === 'undefined') {
+      settings.persistFoundOnDrop = defaultSettings.persistFoundOnDrop;
+    }
+
     appSettings.current = settings;
   }
 
@@ -93,19 +107,30 @@ export function App() {
   }
 
   useEffect(() => {
+    // Test if we can call it
+    try {
+      window.Main.onPlayGrailSound((data) => {
+      });
+    } catch (error) {
+      console.error('🧪 Error calling onPlayGrailSound:', error);
+    }
     window.Main.on('updatedSettings', (settings: Settings) => {
       updateSettings(settings);
       readData(settings);
     });
+
     window.Main.on('noDirectorySelected', () => {
       setUiState(UiState.Ready);
     });
+
     window.Main.on('openFolderWorking', () => {
       setUiState(UiState.Reading);
     });
+
     window.Main.on('errorReadingSaveFile', (saveFiles: string[]) => {
       toast.error(t('Some save files could not be read: ' + saveFiles.join(', ')))
     });
+
     window.Main.on('openFolder', (fileReaderResponse: FileReaderResponse) => {
       if (fileReaderResponse === null) {
         if (uiState !== UiState.Loading) {
@@ -122,9 +147,30 @@ export function App() {
         setUiState(UiState.List);
       }, 500);
     });
+
     window.Main.on('getItemNotes', (itemNotes: ItemNotes) => {
       setItemNotes(itemNotes);
-    })
+    });
+
+    window.Main.onPlayGrailSound((data: { customFile: string; volume: number }) => {
+      try {
+        const audio = new Audio();
+        audio.volume = Math.max(0, Math.min(1, data.volume));
+        audio.src = data.customFile; // Use the audio:// URL directly
+
+        console.log('About to play audio with src:', audio.src);
+
+        audio.play().then(() => {
+          console.log('Audio play() succeeded! 🎉');
+        }).catch(error => {
+          console.error('Audio play() failed:', error);
+        });
+      } catch (error) {
+        console.error('Error setting up audio:', error);
+      }
+    });
+
+    // ... rest of your existing useEffect code ...
 
     const settings = window.Main.getSettings();
     updateSettings(settings);
@@ -142,8 +188,8 @@ export function App() {
   return (
     <>
       <GlobalStyle />
-      <FontsGlobalStyle /> {/* <-- injected so D2Runes/Diablo fonts load globally */}
-      <ThemeProvider theme={createTheme({palette: { mode: 'dark' }})}>
+      <FontsGlobalStyle />
+      <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
         <>
           <Greetings uiState={uiState} onFileClick={handleFileClick} onManualClick={handleManualClick} />
           {uiState === UiState.List &&
@@ -151,6 +197,7 @@ export function App() {
               fileReaderResponse={fileReaderResponse}
               appSettings={appSettings.current}
               itemNotes={itemNotes}
+              playSound={playGrailSound}  // Pass the sound function
             />
           }
           <ToastContainer

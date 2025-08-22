@@ -1,11 +1,14 @@
 CHANGELOG:
 
+V.2.7.8 (Features)
+ - New audio settings added - pick your own sound file and adjust volume
+ - Added changelog to settings
 
 v.2.7.6 (Bug Fixes)
- - Incude proper runeword counts to include all runewords (D2R)/(Ladder)
- - Bug Fix properly detecting file changes when adding, removing or modifying files in the saved game directory.
+ - Proper runeword counts to include all runewords (D2R)/(Ladder)
+ - Bug Fix to detecting file changes when adding, removing or modifying files (saved game directory)
 
-v.2.7.5 (New fork by PyroSplat)
+v.2.7.5 (New Fork by PyroSplat)
  - Theme and font changes 
  - Added sundered charms 
  - Added new feature to keep items marked as found after dropping

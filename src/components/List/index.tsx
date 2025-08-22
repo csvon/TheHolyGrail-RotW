@@ -42,9 +42,10 @@ type ListProps = {
   fileReaderResponse: FileReaderResponse | null,
   appSettings: Settings,
   itemNotes: ItemNotes,
+  playSound?: () => void,
 }
 
-export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) {
+export function List({ fileReaderResponse, appSettings, itemNotes, playSound }: ListProps) {
   const [tab, setTab] = useState(TabState.Statistics);
   const [search, setSearch] = useState<string>('');
   const [historyVersion, setHistoryVersion] = useState(0); // bump when everFound is cleared
@@ -53,15 +54,19 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
   if (fileReaderResponse === null) {
     return null;
   }
-  
+
   const dingPlayer: LegacyRef<HTMLAudioElement> = useRef<HTMLAudioElement>(null);
-  const playSound = () => {
+  const localPlaySound = () => {
     if (!appSettings.enableSounds) {
       return;
     }
     dingPlayer.current?.load();
     dingPlayer.current?.play();
   };
+
+  // Use the passed playSound function if available, otherwise use local fallback
+  const finalPlaySound = playSound || localPlaySound;
+
 
   const { items, ethItems, stats, availableRunes } = fileReaderResponse;
 
@@ -91,7 +96,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
         merged[id] = {
           name: id,
           type: '',
-          inSaves: { History: [ {} as any ] }, // minimal stub shaped like a real save entry
+          inSaves: { History: [{} as any] }, // minimal stub shaped like a real save entry
         };
       }
     }
@@ -111,7 +116,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
         merged[id] = {
           name: id,
           type: '',
-          inSaves: { History: [ {} as any ] },
+          inSaves: { History: [{} as any] },
         };
       }
     }
@@ -133,7 +138,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
 
   // Feed augmented maps so totals include "previously found" when enabled
   const holyGrailStats = useMemo(
-    () => computeStats(itemsForStats, ethItemsForStats, holyGrailSeedData, ethGrailSeedData, appSettings, playSound),
+    () => computeStats(itemsForStats, ethItemsForStats, holyGrailSeedData, ethGrailSeedData, appSettings, finalPlaySound),
     [
       itemsForStats,
       ethItemsForStats,
@@ -143,8 +148,9 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
       appSettings.grailRunewords,
       appSettings.gameMode,
       appSettings.gameVersion,
+      finalPlaySound,
     ]
-  ) ;
+  );
 
   const handleOnlyMissing = (event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
     window.Main.saveSetting(settingsKeys.onlyMissing, checked);
@@ -195,12 +201,12 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
             {appSettings.grailType !== GrailType.Ethereal &&
               [
                 <Tab label={t("Sets")} key="sets" />,
-                appSettings.grailRunes && <Tab label={t("Runes")}  key="runes" />,
-                appSettings.grailRunewords && <Tab label={t("Runeswords")}  key="runewords" />,
+                appSettings.grailRunes && <Tab label={t("Runes")} key="runes" />,
+                appSettings.grailRunewords && <Tab label={t("Runeswords")} key="runewords" />,
               ]
             }
-          </Tabs> 
-        : null}
+          </Tabs>
+          : null}
       </Box>
       {tab != TabState.Statistics && <MissingOnlySwitch>
         <FormControlLabel
@@ -303,7 +309,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes }: ListProps) 
       }
       {(tab == TabState.Runes || tab == TabState.Runewords) && <div style={{ opacity: 0.3, paddingTop: 20 }}>
         <a href="http://creativecommons.org/licenses/by/3.0/" style={{ color: '#eee' }}>
-          <img src={cc} alt="" style={{ width: 20, verticalAlign: "bottom"}} />
+          <img src={cc} alt="" style={{ width: 20, verticalAlign: "bottom" }} />
         </a>
         &nbsp;
         <Trans>Rune icons from</Trans>

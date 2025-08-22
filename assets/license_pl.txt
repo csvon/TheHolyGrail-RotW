@@ -1,15 +1,19 @@
 LISTA ZMIAN:
 
-v.2.7.6 (Poprawki błędów)
- - Uzupełniono poprawne liczenie runewordów, aby uwzględniało wszystkie runewordy (D2R)/(Ladder)
- - Naprawiono błąd polegający na nieprawidłowym wykrywaniu zmian w plikach przy dodawaniu, usuwaniu lub modyfikowaniu plików w katalogu zapisu gry
+v.2.7.8 (Funkcje)
+ - Dodano nowe ustawienia dźwięku – możliwość wyboru własnego pliku audio i regulacji głośności
+ - Dodano changelog do ustawień
 
-v.2.7.5 (Nowy fork autorstwa PyroSplat)
- - Zmiany motywu i czcionki
- - Dodano rozszczepione talizmany
- - Dodano nową funkcję zachowywania znalezionych przedmiotów po ich upuszczeniu
- - Dodano odznakę pokazującą „znaleziono wcześniej”
- - Dodano ustawienia do włączania/wyłączania nowej funkcji i czyszczenia trwałego magazynu
+v.2.7.6 (Poprawki błędów)
+ - Poprawiono liczenie runewordów, aby uwzględniało wszystkie runewordy (D2R)/(Ladder)
+ - Naprawiono błąd wykrywania zmian w plikach podczas dodawania, usuwania lub modyfikowania plików (katalog zapisanych gier)
+
+v.2.7.5 (Nowy fork od PyroSplat)
+ - Zmiany w motywach i czcionkach
+ - Dodano „sundered charms”
+ - Dodano nową funkcję: przedmioty pozostają oznaczone jako znalezione po ich upuszczeniu
+ - Dodano odznakę informującą o „znaleziono wcześniej”
+ - Dodano ustawienia umożliwiające włączenie/wyłączenie nowej funkcji oraz czyszczenie pamięci trwałej
 
 v.2.4.1
  - Naprawiono pobieranie danych z kalkulatora Silospen

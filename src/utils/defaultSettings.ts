@@ -12,7 +12,9 @@ export const settingsKeys: {[name in keyof Settings]: name} = {
   grailRunewords: 'grailRunewords',
   onlyMissing: 'onlyMissing',
   enableSounds: 'enableSounds',
-  persistFoundOnDrop: 'persistFoundOnDrop', // <-- NEW
+  persistFoundOnDrop: 'persistFoundOnDrop',
+  customSoundFile: 'customSoundFile',
+  soundVolume: 'soundVolume',
 }
 
 const defaultSettings: Settings = {
@@ -27,7 +29,9 @@ const defaultSettings: Settings = {
   [settingsKeys.grailRunewords]: false,
   [settingsKeys.onlyMissing]: false,
   [settingsKeys.enableSounds]: false,
-  [settingsKeys.persistFoundOnDrop]: false, // <-- NEW default OFF
+  [settingsKeys.persistFoundOnDrop]: false,
+  [settingsKeys.customSoundFile]: 'assets/ding.mp3',
+  [settingsKeys.soundVolume]: 1.0, 
 }
 
 export default defaultSettings;

@@ -9,18 +9,21 @@ import settingsStore from './lib/settings';
 import { setupStreamFeed, streamPort, updateDataToListeners, updateSettingsToListeners } from './lib/stream';
 import { registerUpdateDownloader } from './lib/update';
 import { getEverFound, markEverFound, clearEverFound } from './lib/everFound';
+import { statSync } from 'fs';
+import { protocol } from 'electron';
 
 // these constants are set by the build stage
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 
 export const CSP_HEADER =
-  "default-src 'self' 'unsafe-inline' data: ws:; " +
+  "default-src 'self' 'unsafe-inline' data: ws: audio:; " +
   "script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; " +
   "style-src 'unsafe-inline'; " +
   "style-src-elem 'unsafe-inline' http://localhost:*; " +
   "font-src file: http://localhost:*; " +
   "frame-src file: http://localhost:*;" +
+  "media-src 'self' data: audio: file:; " +
   "connect-src https://api.github.com data: ws: http://localhost:*;";
 
 export let eventToReply: IpcMainEvent | null;
@@ -34,6 +37,13 @@ const assetsPath =
   process.env.NODE_ENV === 'production'
     ? process.resourcesPath
     : app.getAppPath()
+
+function setupAudioProtocol() {
+  protocol.registerFileProtocol('audio', (request, callback) => {
+    const url = request.url.substr(8); // Remove 'audio://' prefix
+    callback({ path: url });
+  });
+}
 
 function createWindow() {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -78,7 +88,7 @@ function createWindow() {
     closeApp();
   });
 
- // registerUpdateDownloader(mainWindow);
+  // registerUpdateDownloader(mainWindow);
   setupStreamFeed();
   runSilospenServer();
 }
@@ -182,6 +192,140 @@ async function registerListeners() {
     event.returnValue = getEverFound();
   });
 
+  ipcMain.on('triggerGrailSound', () => {
+    const settings = settingsStore.getSettings();
+    if (settings.enableSounds) {
+      const soundPath = settings.customSoundFile || 'assets/ding.mp3';
+      const volume = settings.soundVolume ?? 1.0;
+
+      // Validate path and send to renderer
+      let validatedPath = soundPath;
+      if (!soundPath.startsWith('http') && !soundPath.startsWith('file://')) {
+        try {
+          validatedPath = require('path').isAbsolute(soundPath)
+            ? soundPath
+            : join(assetsPath, soundPath);
+        } catch (e) {
+          validatedPath = join(assetsPath, 'assets', 'sounds', 'ding.mp3');
+        }
+      }
+
+      if (mainWindow) {
+        mainWindow.webContents.send('playGrailSound', {
+          customFile: validatedPath,
+          volume: volume
+        });
+      }
+    }
+  });
+  // NEW: Handle sound file picker
+  ipcMain.handle('pickSoundFile', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Select Custom Sound File',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg'] }
+      ]
+    });
+
+    if (canceled || filePaths.length === 0) return null;
+
+    try {
+      const filePath = filePaths[0];
+      const stats = statSync(filePath);
+
+      if (stats.isDirectory()) {
+        console.warn(`Selected path is a directory: ${filePath}`);
+        return null;
+      }
+
+      if (!stats.isFile()) {
+        console.warn(`Selected path is not a file: ${filePath}`);
+        return null;
+      }
+
+      return filePath;
+    } catch (error) {
+      console.error('Error checking file stats:', error);
+      return null;
+    }
+  });
+
+  // NEW: Handle grail sound playing (fixes the EISDIR error)
+  ipcMain.on('playGrailSound', (event, soundPath: string, volume: number) => {
+
+    let validatedSoundPath = soundPath;
+
+    if (!soundPath.startsWith('http') && !soundPath.startsWith('audio://')) {
+      try {
+        const fullPath = require('path').isAbsolute(soundPath)
+          ? soundPath
+          : join(assetsPath, soundPath);
+
+
+
+        const stats = statSync(fullPath);
+
+        if (stats.isFile()) {
+          validatedSoundPath = `audio://${fullPath}`; // Use custom protocol
+
+        } else {
+          throw new Error('Not a file');
+        }
+      } catch (e) {
+
+        validatedSoundPath = `audio://${join(assetsPath, 'assets', 'ding.mp3')}`;
+      }
+    }
+
+
+
+    event.reply('playGrailSound', {
+      customFile: validatedSoundPath,
+      volume: volume
+    });
+  });
+
+  // NEW: Handle changelog content reading
+  ipcMain.handle('getChangelogContent', async () => {
+    const fs = require('fs').promises;
+    const path = require('path');
+
+    try {
+      // Try different possible paths for the license.txt file
+      const possiblePaths = [
+        path.resolve(assetsPath, 'assets', 'license.txt'),
+        path.resolve(assetsPath, 'license.txt'),
+        path.resolve(__dirname, '../../../assets/license.txt'),
+        path.resolve(__dirname, '../../assets/license.txt'),
+        path.resolve(__dirname, '../assets/license.txt'),
+        path.resolve(process.cwd(), 'assets', 'license.txt'),
+      ];
+
+      for (const licensePath of possiblePaths) {
+        try {
+          const content = await fs.readFile(licensePath, 'utf8');
+          console.log(`Successfully read changelog from: ${licensePath}`);
+          return content;
+        } catch (err) {
+          console.log(`Failed to read from ${licensePath}:`, (err as Error).message);
+          continue;
+        }
+      }
+
+      // If none of the paths worked, return an error message
+      return `Changelog file not found. Tried the following paths:
+
+${possiblePaths.map(p => `- ${p}`).join('\n')}
+
+Please ensure the license.txt file exists in the assets folder.`;
+
+    } catch (error) {
+      console.error('Error reading changelog:', error);
+      throw new Error(`Failed to read changelog: ${(error as Error).message}`);
+    }
+  });
+
   ipcMain.handle('confirmAndClearEverFound', async () => {
     const { response } = await dialog.showMessageBox({
       type: 'warning',
@@ -212,6 +356,7 @@ async function registerListeners() {
 
 app.whenReady()
   .then(async () => {
+    setupAudioProtocol();
     await registerListeners();
     createWindow();
   })

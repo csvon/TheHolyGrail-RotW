@@ -1,8 +1,9 @@
 import { api } from '../../electron/bridge'
 
 declare global {
-  // eslint-disable-next-line
   interface Window {
-    Main: typeof api
+    Main: typeof api & {
+      onPlayGrailSound: (callback: (data: { customFile: string; volume: number }) => void) => void;
+    }
   }
 }

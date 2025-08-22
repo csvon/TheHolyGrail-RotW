@@ -62,6 +62,26 @@ class ItemsStore {
   getItems = () => {
     return this.currentData;
   }
+  checkForNewItems = (newResults: FileReaderResponse): boolean => {
+    const currentItemIds = new Set([
+      ...Object.keys(this.currentData.items || {}),
+      ...Object.keys(this.currentData.ethItems || {}),
+    ]);
+
+    const newItemIds = new Set([
+      ...Object.keys(newResults.items || {}),
+      ...Object.keys(newResults.ethItems || {}),
+    ]);
+
+    // Check if there are any new items
+    for (const itemId of newItemIds) {
+      if (!currentItemIds.has(itemId)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
 
   // used only in manual selection mode
   fillInAvailableRunes = () => {
@@ -344,6 +364,15 @@ class ItemsStore {
       // --- end NEW
 
       event.reply('openFolder', results);
+
+      // NEW: Check for new items and play sound if enabled
+      if (playSounds && s.enableSounds) {
+        const hasNewItems = this.checkForNewItems(results);
+        if (hasNewItems) {
+          event.sender.send('triggerGrailSound');
+        }
+      }
+
       this.currentData = results;
       updateDataToListeners();
     });

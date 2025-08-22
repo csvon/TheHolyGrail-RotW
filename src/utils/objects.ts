@@ -221,6 +221,7 @@ export const clearPrevUniqItemsFound = () => {
   prevUniqItemsFound = [];
   prevSoundTimestamp = Date.now();
 }
+
 export const computeStats = (
   items: ItemsInSaves,
   ethItems: ItemsInSaves,
@@ -250,7 +251,8 @@ export const computeStats = (
     .concat(otherStats.uniqItemsList)
     .concat(setsStats.uniqItemsList);
   
-  if (settings.gameMode !== GameMode.Manual && playSound && Date.now() - prevSoundTimestamp > 1000) {
+  // Enhanced sound logic with better throttling and settings check
+  if (settings.gameMode !== GameMode.Manual && playSound && settings.enableSounds && Date.now() - prevSoundTimestamp > 1000) {
     prevSoundTimestamp = Date.now();
     // play sound if new item is found
     if (prevUniqItemsFound.length) {

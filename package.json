@@ -1,7 +1,7 @@
 {
   "name": "d2rholygrail",
   "author": "Kamil Tunkiewicz <kamil.tunkiewicz(at)gmail.com> - Modified by PyroSplat <pyrosplat(at)gmail.com>",
-  "version": "2.7.6",
+  "version": "2.7.7",
   "description": "Scan your Diablo 2 Resurrected saves to check your Holy Grail progress",
   "main": "./.webpack/main",
   "scripts": {

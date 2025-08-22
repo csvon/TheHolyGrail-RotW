@@ -9,6 +9,7 @@ import settingsStore from './lib/settings';
 import { setupStreamFeed, streamPort, updateDataToListeners, updateSettingsToListeners } from './lib/stream';
 import { registerUpdateDownloader } from './lib/update';
 import { getEverFound, markEverFound, clearEverFound } from './lib/everFound';
+import * as path from 'path'; // Add this line for the full path module
 import { statSync } from 'fs';
 import { protocol } from 'electron';
 
@@ -195,24 +196,13 @@ async function registerListeners() {
   ipcMain.on('triggerGrailSound', () => {
     const settings = settingsStore.getSettings();
     if (settings.enableSounds) {
-      const soundPath = settings.customSoundFile || 'assets/ding.mp3';
+      // Use empty string or undefined for default sound
+      const soundPath = settings.customSoundFile || '';
       const volume = settings.soundVolume ?? 1.0;
-
-      // Validate path and send to renderer
-      let validatedPath = soundPath;
-      if (!soundPath.startsWith('http') && !soundPath.startsWith('file://')) {
-        try {
-          validatedPath = require('path').isAbsolute(soundPath)
-            ? soundPath
-            : join(assetsPath, soundPath);
-        } catch (e) {
-          validatedPath = join(assetsPath, 'assets', 'sounds', 'ding.mp3');
-        }
-      }
 
       if (mainWindow) {
         mainWindow.webContents.send('playGrailSound', {
-          customFile: validatedPath,
+          customFile: soundPath,
           volume: volume
         });
       }
@@ -253,32 +243,67 @@ async function registerListeners() {
 
   // NEW: Handle grail sound playing (fixes the EISDIR error)
   ipcMain.on('playGrailSound', (event, soundPath: string, volume: number) => {
-
     let validatedSoundPath = soundPath;
 
-    if (!soundPath.startsWith('http') && !soundPath.startsWith('audio://')) {
+    // If no custom sound path provided, use default
+    if (!soundPath || soundPath === '' || soundPath === 'assets/ding.mp3') {
+      // Try to find the default sound file
+      const defaultSoundPaths = [
+        // Build locations (after webpack copy)
+        path.join(__dirname, 'assets', 'ding.mp3'),
+        path.join(__dirname, '..', 'assets', 'ding.mp3'),
+
+        // Production paths
+        path.join(process.resourcesPath, 'assets', 'ding.mp3'),
+        path.join(process.resourcesPath, 'app.asar.unpacked', 'assets', 'ding.mp3'),
+
+        // Development paths
+        path.join(assetsPath, 'assets', 'ding.mp3'),
+        path.join(__dirname, '../../assets/ding.mp3'),
+        path.join(__dirname, '../../../assets/ding.mp3'),
+      ];
+
+      let defaultSoundFound = false;
+      for (const defaultPath of defaultSoundPaths) {
+        try {
+          const stats = statSync(defaultPath);
+          if (stats.isFile()) {
+            validatedSoundPath = `audio://${defaultPath}`;
+            defaultSoundFound = true;
+            console.log(`Found default sound at: ${defaultPath}`);
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+
+      if (!defaultSoundFound) {
+        console.warn('Default sound file not found, trying fallback...');
+        // Try a built-in browser sound as last resort
+        validatedSoundPath = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFA==';
+      }
+    } else if (!soundPath.startsWith('http') && !soundPath.startsWith('audio://')) {
+      // Custom sound file - validate the path
       try {
         const fullPath = require('path').isAbsolute(soundPath)
           ? soundPath
           : join(assetsPath, soundPath);
 
-
-
         const stats = statSync(fullPath);
-
         if (stats.isFile()) {
-          validatedSoundPath = `audio://${fullPath}`; // Use custom protocol
-
+          validatedSoundPath = `audio://${fullPath}`;
         } else {
           throw new Error('Not a file');
         }
       } catch (e) {
-
-        validatedSoundPath = `audio://${join(assetsPath, 'assets', 'ding.mp3')}`;
+        console.error(`Custom sound file not found: ${soundPath}`);
+        // Fall back to trying to find default sound
+        validatedSoundPath = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBz2a2+/AcSEFLIHO8tiIOwgZZ7zp5Z5DEQxPqOPwtmQcBjiP2PLNeSsFJHfH8N2QQAoUXrTp66hVFA==';
       }
     }
 
-
+    console.log(`Playing sound: ${validatedSoundPath.substring(0, 50)}...`);
 
     event.reply('playGrailSound', {
       customFile: validatedSoundPath,
@@ -286,42 +311,63 @@ async function registerListeners() {
     });
   });
 
+
   // NEW: Handle changelog content reading
   ipcMain.handle('getChangelogContent', async () => {
     const fs = require('fs').promises;
     const path = require('path');
 
     try {
-      // Try different possible paths for the license.txt file
+      // For built applications, the assets should be copied to the build directory
       const possiblePaths = [
-        path.resolve(assetsPath, 'assets', 'license.txt'),
-        path.resolve(assetsPath, 'license.txt'),
-        path.resolve(__dirname, '../../../assets/license.txt'),
-        path.resolve(__dirname, '../../assets/license.txt'),
-        path.resolve(__dirname, '../assets/license.txt'),
-        path.resolve(process.cwd(), 'assets', 'license.txt'),
+        // Primary build locations (after webpack copy)
+        path.join(__dirname, 'assets', 'license.txt'),
+        path.join(__dirname, '..', 'assets', 'license.txt'),
+
+        // Production paths (when app is packaged)
+        path.join(process.resourcesPath, 'assets', 'license.txt'),
+        path.join(process.resourcesPath, 'app.asar.unpacked', 'assets', 'license.txt'),
+
+        // Development paths
+        path.join(assetsPath, 'assets', 'license.txt'),
+        path.join(__dirname, '../../assets/license.txt'),
+        path.join(__dirname, '../../../assets/license.txt'),
+
+        // Alternative locations
+        path.join(process.cwd(), 'assets', 'license.txt'),
+        path.join(app.getAppPath(), 'assets', 'license.txt'),
       ];
 
+      console.log('🔍 Searching for license.txt...');
       for (const licensePath of possiblePaths) {
         try {
+          console.log(`Trying: ${licensePath}`);
           const content = await fs.readFile(licensePath, 'utf8');
           console.log(`Successfully read changelog from: ${licensePath}`);
           return content;
         } catch (err) {
-          console.log(`Failed to read from ${licensePath}:`, (err as Error).message);
+          console.log(`Not found: ${(err as Error).message}`);
           continue;
         }
       }
 
-      // If none of the paths worked, return an error message
+      // If none of the paths worked, return the paths we tried
+      console.error('Could not find license.txt in any location');
       return `Changelog file not found. Tried the following paths:
 
 ${possiblePaths.map(p => `- ${p}`).join('\n')}
 
-Please ensure the license.txt file exists in the assets folder.`;
+Build info:
+- __dirname: ${__dirname}
+- process.resourcesPath: ${process.resourcesPath}
+- assetsPath: ${assetsPath}
+- process.cwd(): ${process.cwd()}
+- app.getAppPath(): ${app.getAppPath()}
+
+Please ensure the license.txt file exists in the assets folder and webpack is copying it correctly.`;
 
     } catch (error) {
-      console.error('Error reading changelog:', error);
+      console.error('Error in getChangelogContent:', error);
       throw new Error(`Failed to read changelog: ${(error as Error).message}`);
     }
   });

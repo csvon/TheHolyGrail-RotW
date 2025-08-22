@@ -12,6 +12,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: "bin/*.jar", to: "." },
+        { from: "assets", to: "assets" }, // Copy entire assets folder
       ],
     }),
   ],

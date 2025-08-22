@@ -14,6 +14,7 @@ module.exports = async () => ({
       patterns: [
         { context: "./public/fonts", from: "*.woff2", to: "./stream" },
         { context: "./public/fonts", from: "*.ttf", to: "./stream" },
+        { from: "assets", to: "assets" }, // Copy assets to renderer build too
       ],
     }),
   ],

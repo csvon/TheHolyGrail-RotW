@@ -30,7 +30,7 @@ const defaultSettings: Settings = {
   [settingsKeys.onlyMissing]: false,
   [settingsKeys.enableSounds]: false,
   [settingsKeys.persistFoundOnDrop]: false,
-  [settingsKeys.customSoundFile]: 'assets/ding.mp3',
+  [settingsKeys.customSoundFile]: '',
   [settingsKeys.soundVolume]: 1.0, 
 }
 

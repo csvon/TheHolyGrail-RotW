@@ -83,7 +83,7 @@ Get audio alerts when you find new grail items!
 
 ---
 
-##v🪟 Overlay: Live Grail Stats (On-Top / Stream-Ready)
+## 🪟 Overlay: Live Grail Stats (On-Top / Stream-Ready)
 
 Display your live Holy Grail progress right over the game window—perfect without alt-tabbing.
 

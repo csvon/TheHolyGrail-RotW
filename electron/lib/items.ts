@@ -10,7 +10,7 @@ import { readdirSync } from 'original-fs';
 import { AvailableRunes, FileReaderResponse, GameMode, GrailType, Item, ItemDetails, ItemNotes, RuneType } from '../../src/@types/main.d';
 import storage from 'electron-json-storage';
 import chokidar, { FSWatcher } from 'chokidar';
-import { getHolyGrailSeedData, runesSeed } from './holyGrailSeedData';
+import { getHolyGrailSeedData, runesSeed, runewordsSeed } from './holyGrailSeedData';
 import { buildFlattenObjectCacheKey, flattenObject, isRune, simplifyItemName } from '../../src/utils/objects';
 import { eventToReply, setEventToReply } from '../main';
 import settingsStore from './settings';
@@ -27,6 +27,7 @@ class ItemsStore {
   filesChanged: boolean;
   readingFiles: boolean;
   itemNotes: ItemNotes | null;
+  recentFinds: Array<{name: string, type: string, timestamp: number}>;
 
   everFound: Record<string, boolean>;
 
@@ -44,6 +45,8 @@ class ItemsStore {
     this.filesChanged = false;
     this.readingFiles = false;
     this.itemNotes = null;
+    const storedFinds = storage.getSync('recentFinds');
+    this.recentFinds = Array.isArray(storedFinds) ? storedFinds : [];
     this.everFound = (storage.getSync('everFound') as Record<string, boolean>) || {};
     setInterval(this.tickReader, 500);
     try { d2s.getConstantData(96); } catch (e) { d2s.setConstantData(96, constants96); }
@@ -57,6 +60,70 @@ class ItemsStore {
 
   getEverFound = (): Record<string, boolean> => {
     return this.everFound || {};
+  };
+
+  getRecentFinds = (): Array<{name: string, type: string, timestamp: number}> => {
+    return this.recentFinds || [];
+  };
+
+  getItemCategory = (itemId: string, itemName: string, isEthereal: boolean = false): string => {
+    const settings = settingsStore.getSettings();
+    const simplifiedId = simplifyItemName(itemId);
+    
+    // Check if it's a rune
+    if (runesSeed[itemId.toLowerCase()] || runesSeed[simplifiedId]) {
+      return 'Rune';
+    }
+    
+    // Check if it's a runeword
+    if (runewordsSeed[simplifiedId] || itemId.startsWith('runeword')) {
+      return 'Runeword';
+    }
+    
+    // Check if it's in sets
+    const holyGrailData = getHolyGrailSeedData(settings, false);
+    if (holyGrailData.sets) {
+      const setsFlat = flattenObject(holyGrailData.sets);
+      if (setsFlat[simplifiedId]) {
+        return isEthereal ? 'Ethereal Set' : 'Set';
+      }
+    }
+    
+    // Check if it's a unique item
+    if (holyGrailData.uniques) {
+      const uniquesFlat = flattenObject(holyGrailData.uniques);
+      if (uniquesFlat[simplifiedId]) {
+        return isEthereal ? 'Ethereal Unique' : 'Unique';
+      }
+    }
+    
+    // If ethereal but not categorized above
+    if (isEthereal) {
+      return 'Ethereal';
+    }
+    
+    return 'Item';
+  };
+
+  addRecentFind = (itemName: string, itemType: string = '') => {
+    const timestamp = Date.now();
+    this.recentFinds = this.recentFinds || [];
+    
+    // Remove item if it already exists (avoid duplicates)
+    this.recentFinds = this.recentFinds.filter(find => find.name !== itemName);
+    
+    // Add to beginning of array
+    this.recentFinds.unshift({ name: itemName, type: itemType, timestamp });
+    
+    // Keep only the configured number of items (default to 5)
+    const settings = settingsStore.getSettings();
+    const maxItems = settings.overlayRecentFindsCount || 5;
+    this.recentFinds = this.recentFinds.slice(0, maxItems);
+    
+    // Save to storage
+    storage.set('recentFinds', this.recentFinds, (error) => {
+      if (error) console.log('Error saving recent finds:', error);
+    });
   };
 
   getItems = () => {
@@ -73,13 +140,30 @@ class ItemsStore {
       ...Object.keys(newResults.ethItems || {}),
     ]);
 
-    // Check if there are any new items
+    let hasNewItems = false;
+    // Check if there are any new items and track them
     for (const itemId of newItemIds) {
       if (!currentItemIds.has(itemId)) {
-        return true;
+        hasNewItems = true;
+        
+        // Get display name and determine category from new results
+        let displayName = itemId;
+        let isEthereal = false;
+        if (newResults.items[itemId]) {
+          displayName = newResults.items[itemId].name || itemId;
+        } else if (newResults.ethItems[itemId]) {
+          displayName = newResults.ethItems[itemId].name || itemId;
+          isEthereal = true;
+        }
+        
+        // Determine item category
+        const itemCategory = this.getItemCategory(itemId, displayName, isEthereal);
+        
+        // Add to recent finds
+        this.addRecentFind(displayName, itemCategory);
       }
     }
-    return false;
+    return hasNewItems;
   };
 
 

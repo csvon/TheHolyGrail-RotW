@@ -97,6 +97,8 @@ export type Settings = {
   overlayX: number,
   overlayY: number,
   overlayScale: number,
+  overlayShowRecentFinds: boolean,
+  overlayRecentFindsCount: number,
 }
 
 export type HolyGrailSeed = IHolyGrailData & {

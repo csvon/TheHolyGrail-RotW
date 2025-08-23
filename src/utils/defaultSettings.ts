@@ -19,6 +19,8 @@ export const settingsKeys: {[name in keyof Settings]: name} = {
   overlayX: 'overlayX',
   overlayY: 'overlayY',
   overlayScale: 'overlayScale',
+  overlayShowRecentFinds: 'overlayShowRecentFinds',
+  overlayRecentFindsCount: 'overlayRecentFindsCount',
 }
 
 const defaultSettings: Settings = {
@@ -40,6 +42,8 @@ const defaultSettings: Settings = {
   [settingsKeys.overlayX]: 100,
   [settingsKeys.overlayY]: 100,
   [settingsKeys.overlayScale]: 1.0,
+  [settingsKeys.overlayShowRecentFinds]: true,
+  [settingsKeys.overlayRecentFindsCount]: 5,
 }
 
 export default defaultSettings;

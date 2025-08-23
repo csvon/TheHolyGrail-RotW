@@ -1,5 +1,9 @@
 CHANGELOG:
 
+V.2.7.9 (Features)
+ - Add recent item finds (optional) to the game overlay
+ - Added settings to adjust how many recent items to display
+
 V.2.7.8 (Features)
  - Added Overlay - Show stats over game window (drag to place )
  - Added control size slider for overlay widget in settings

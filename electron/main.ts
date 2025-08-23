@@ -53,8 +53,22 @@ function createOverlayWindow(x: number = 100, y: number = 100, scale: number = 1
     return;
   }
 
-  const baseWidth = 300;
-  const baseHeight = 250;
+  const baseWidth = 320;
+  const settings = settingsStore.getSettings();
+  const recentFindsCount = settings.overlayRecentFindsCount || 5;
+  const showRecentFinds = settings.overlayShowRecentFinds;
+  
+  // Calculate dynamic height based on recent finds count
+  let baseHeight = 320; // Base height for just progress circles
+  if (showRecentFinds) {
+    // Add height for recent finds header and items
+    const headerHeight = 40;
+    const itemHeight = recentFindsCount > 7 ? 22 : 26; // Compact vs normal item height
+    const itemsHeight = recentFindsCount * itemHeight;
+    const paddingAndMargins = 60;
+    baseHeight += headerHeight + itemsHeight + paddingAndMargins;
+  }
+  
   const scaledWidth = Math.round(baseWidth * scale);
   const scaledHeight = Math.round(baseHeight * scale);
 
@@ -95,12 +109,27 @@ function createOverlayWindow(x: number = 100, y: number = 100, scale: number = 1
   });
 }
 
-function updateOverlaySize(scale: number) {
+function updateOverlaySize(scale?: number) {
   if (overlayWindow) {
-    const baseWidth = 300;
-    const baseHeight = 250;
-    const scaledWidth = Math.round(baseWidth * scale);
-    const scaledHeight = Math.round(baseHeight * scale);
+    const baseWidth = 320;
+    const settings = settingsStore.getSettings();
+    const recentFindsCount = settings.overlayRecentFindsCount || 5;
+    const showRecentFinds = settings.overlayShowRecentFinds;
+    const currentScale = scale || settings.overlayScale || 1.0;
+    
+    // Calculate dynamic height based on recent finds count
+    let baseHeight = 320; // Base height for just progress circles
+    if (showRecentFinds) {
+      // Add height for recent finds header and items
+      const headerHeight = 40;
+      const itemHeight = recentFindsCount > 7 ? 22 : 26; // Compact vs normal item height
+      const itemsHeight = recentFindsCount * itemHeight;
+      const paddingAndMargins = 60;
+      baseHeight += headerHeight + itemsHeight + paddingAndMargins;
+    }
+    
+    const scaledWidth = Math.round(baseWidth * currentScale);
+    const scaledHeight = Math.round(baseHeight * currentScale);
     overlayWindow.setSize(scaledWidth, scaledHeight);
   }
 }
@@ -224,6 +253,10 @@ async function registerListeners() {
     if (key === 'overlayScale') {
       updateOverlaySize(value as number);
     }
+    // Handle recent finds settings changes - update overlay size
+    if (key === 'overlayShowRecentFinds' || key === 'overlayRecentFindsCount') {
+      updateOverlaySize();
+    }
   });
 
   ipcMain.on('saveImage', (event, data: string) => {
@@ -282,6 +315,10 @@ async function registerListeners() {
 
   ipcMain.on('getEverFound', (event) => {
     event.returnValue = getEverFound();
+  });
+
+  ipcMain.on('getRecentFinds', (event) => {
+    event.returnValue = itemsDatabase.getRecentFinds();
   });
 
   ipcMain.on('triggerGrailSound', () => {

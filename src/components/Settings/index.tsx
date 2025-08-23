@@ -171,6 +171,16 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
     window.Main.saveSetting(settingsKeys.overlayScale, scale / 100);
   };
 
+  const handleOverlayRecentFindsToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = event.target.checked;
+    window.Main.saveSetting(settingsKeys.overlayShowRecentFinds, enabled);
+  };
+
+  const handleOverlayRecentFindsCountChange = (event: Event, newValue: number | number[]) => {
+    const count = Array.isArray(newValue) ? newValue[0] : newValue;
+    window.Main.saveSetting(settingsKeys.overlayRecentFindsCount, count);
+  };
+
   const handleChangelogOpen = async () => {
     try {
    
@@ -525,13 +535,14 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                         <Slider
                           value={currentOverlayScale}
                           onChange={handleOverlayScaleChange}
-                          min={70}
+                          min={50}
                           max={150}
                           step={5}
                           marks={[
-                            { value: 70, label: '70%' },
+                            { value: 50, label: '50%' },
+                            { value: 75, label: '75%' },
                             { value: 100, label: '100%' },
-                            { value: 130, label: '130%' },
+                            { value: 125, label: '125%' },
                             { value: 150, label: '150%' }
                           ]}
                           valueLabelDisplay="auto"
@@ -542,8 +553,58 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                       </Box>
                     </Box>
 
+                    {/* Recent Finds Controls */}
+                    <Box sx={{ mt: 3, mb: 2 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={!!appSettings.overlayShowRecentFinds}
+                            onChange={handleOverlayRecentFindsToggle}
+                          />
+                        }
+                        label={t('Show Recent Finds')}
+                        sx={{ mb: 2, alignSelf: 'flex-start' }}
+                      />
+
+                      {appSettings.overlayShowRecentFinds && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 2 }}>
+                            {t('Number of Recent Finds')}: {appSettings.overlayRecentFindsCount || 5}
+                          </Typography>
+                          <Box sx={{ width: '100%' }}>
+                            <Slider
+                              value={appSettings.overlayRecentFindsCount || 5}
+                              onChange={handleOverlayRecentFindsCountChange}
+                              min={1}
+                              max={10}
+                              step={1}
+                              marks={[
+                                { value: 1, label: '1' },
+                                { value: 3, label: '3' },
+                                { value: 5, label: '5' },
+                                { value: 8, label: '8' },
+                                { value: 10, label: '10' },
+                              ]}
+                              sx={{
+                                color: '#90caf9',
+                                '& .MuiSlider-thumb': {
+                                  backgroundColor: '#90caf9',
+                                },
+                                '& .MuiSlider-track': {
+                                  backgroundColor: '#90caf9',
+                                },
+                                '& .MuiSlider-rail': {
+                                  backgroundColor: '#444',
+                                }
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      )}
+                    </Box>
+
                     <Typography variant="caption" display="block" color="textSecondary" sx={{ fontSize: '0.85rem' }}>
-                      {t('Adjust the size of the overlay window. Changes apply immediately.')}
+                      {t('Configure overlay appearance and recent finds display. Changes apply immediately.')}
                     </Typography>
                   </Box>
                 )}

@@ -68,6 +68,11 @@ export const api = {
     return ipcRenderer.sendSync('getEverFound');
   },
 
+  // --- Recent finds ---
+  getRecentFinds: (): Array<{name: string, type: string, timestamp: number}> => {
+    return ipcRenderer.sendSync('getRecentFinds');
+  },
+
   // NEW: ask main to confirm and clear the persistent history
   clearEverFoundWithConfirm: (): Promise<{ cleared: boolean }> => {
     return ipcRenderer.invoke('confirmAndClearEverFound');

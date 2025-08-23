@@ -111,12 +111,14 @@ export function updateDataToListeners() {
   const augmented = withHistory(raw);
   streamListeners.forEach((socket) => {
     socket.emit("openFolder", augmented);
+    socket.emit("recentFinds", itemsDatabase.getRecentFinds());
   });
 }
 
 const addStreamListener = (socket: Socket): void => {
   streamListeners.set(socket.id, socket);
   socket.emit("updatedSettings", settingsStore.getSettings());
+  socket.emit("recentFinds", itemsDatabase.getRecentFinds());
   updateDataToListeners();
   updateSettingsToListeners();
 }

@@ -83,6 +83,20 @@ Get audio alerts when you find new grail items!
 
 ---
 
+##v🪟 Overlay: Live Grail Stats (On-Top / Stream-Ready)
+
+Display your live Holy Grail progress right over the game window—perfect without alt-tabbing.
+
+<p align="center"> <img src="docs/images/overlay_v1.png" alt="Overlay showing live grail stats over D2R" width="900"/> </p>
+
+**Features**
+- Completion % and found / total (updates in real time)
+- Compact, high-contrast design that stays readable over D2R
+- It does not modify the game in any way.
+- Adjustable size in settings
+
+---
+
 # Info for developers
 
 ## Installation

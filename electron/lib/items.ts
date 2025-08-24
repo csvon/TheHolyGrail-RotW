@@ -369,7 +369,7 @@ class ItemsStore {
         .then((result) => {
           results.stats[saveName] = 0;
           result.forEach((item) => {
-            let name = item.unique_name || item.set_name || item.rare_name || item.rare_name2 || '';
+            let name = item.unique_name || item.set_name || '';
             name = name.toLowerCase().replace(/[^a-z0-9]/gi, '');
             if (name.indexOf('rainbowfacet') !== -1) {
               let type = '';
@@ -479,7 +479,7 @@ class ItemsStore {
 
     const parseItems = (itemList: d2s.types.IItem[], isEmbed: boolean = false) => {
       itemList.forEach((item) => {
-        if (item.unique_name || item.set_name || item.rare_name || item.rare_name2) {
+        if (item.unique_name || item.set_name) {
           items.push(item);
         }
         if (isRune(item) && runesMapping[item.type as RuneType]) {

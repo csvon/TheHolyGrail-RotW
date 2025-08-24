@@ -82,6 +82,7 @@ function createOverlayWindow(x: number = 100, y: number = 100, scale: number = 1
     skipTaskbar: true,
     resizable: false,
     transparent: true,
+    focusable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -105,6 +106,25 @@ function createOverlayWindow(x: number = 100, y: number = 100, scale: number = 1
       const [x, y] = overlayWindow.getPosition();
       settingsStore.saveSetting('overlayX', x);
       settingsStore.saveSetting('overlayY', y);
+    }
+  });
+
+  // Prevent overlay from being minimized or hidden
+  overlayWindow.on('minimize', (event) => {
+    event.preventDefault();
+  });
+
+  overlayWindow.on('hide', (event) => {
+    event.preventDefault();
+    if (overlayWindow) {
+      overlayWindow.show();
+    }
+  });
+
+  // Keep overlay always on top even when clicked
+  overlayWindow.on('blur', () => {
+    if (overlayWindow) {
+      overlayWindow.setAlwaysOnTop(true);
     }
   });
 }

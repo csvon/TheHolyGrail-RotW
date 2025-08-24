@@ -73,6 +73,10 @@ export const api = {
     return ipcRenderer.sendSync('getRecentFinds');
   },
 
+  clearRecentFinds: (): Promise<void> => {
+    return ipcRenderer.invoke('clearRecentFinds');
+  },
+
   // NEW: ask main to confirm and clear the persistent history
   clearEverFoundWithConfirm: (): Promise<{ cleared: boolean }> => {
     return ipcRenderer.invoke('confirmAndClearEverFound');

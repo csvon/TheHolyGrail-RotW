@@ -66,6 +66,13 @@ class ItemsStore {
     return this.recentFinds || [];
   };
 
+  clearRecentFinds = (): void => {
+    this.recentFinds = [];
+    storage.set('recentFinds', this.recentFinds, (error) => {
+      if (error) console.log('Error clearing recent finds:', error);
+    });
+  };
+
   getItemCategory = (itemId: string, itemName: string, isEthereal: boolean = false): string => {
     const settings = settingsStore.getSettings();
     const simplifiedId = simplifyItemName(itemId);
@@ -106,8 +113,13 @@ class ItemsStore {
   };
 
   addRecentFind = (itemName: string, itemType: string = '') => {
-    const timestamp = Date.now();
+    let timestamp = Date.now();
     this.recentFinds = this.recentFinds || [];
+    
+    // Ensure unique timestamps by checking if the latest timestamp already exists
+    if (this.recentFinds.length > 0 && this.recentFinds[0].timestamp >= timestamp) {
+      timestamp = this.recentFinds[0].timestamp + 1;
+    }
     
     // Remove item if it already exists (avoid duplicates)
     this.recentFinds = this.recentFinds.filter(find => find.name !== itemName);

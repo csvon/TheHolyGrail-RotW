@@ -321,6 +321,11 @@ async function registerListeners() {
     event.returnValue = itemsDatabase.getRecentFinds();
   });
 
+  ipcMain.handle('clearRecentFinds', async () => {
+    itemsDatabase.clearRecentFinds();
+    updateDataToListeners();
+  });
+
   ipcMain.on('triggerGrailSound', () => {
     const settings = settingsStore.getSettings();
     if (settings.enableSounds) {

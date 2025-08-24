@@ -35,6 +35,7 @@ import Button from '@mui/material/Button';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { testGrailSound } from '../../utils/soundUtils';
 import HistoryIcon from '@mui/icons-material/History';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -179,6 +180,14 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
   const handleOverlayRecentFindsCountChange = (event: Event, newValue: number | number[]) => {
     const count = Array.isArray(newValue) ? newValue[0] : newValue;
     window.Main.saveSetting(settingsKeys.overlayRecentFindsCount, count);
+  };
+
+  const handleClearRecentFinds = async () => {
+    try {
+      await window.Main.clearRecentFinds();
+    } catch (e) {
+      console.error('Error clearing recent finds:', e);
+    }
   };
 
   const handleChangelogOpen = async () => {
@@ -598,6 +607,19 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                                 }
                               }}
                             />
+                          </Box>
+                          
+                          {/* Clear Recent Finds Button */}
+                          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              startIcon={<ClearAllIcon />}
+                              onClick={handleClearRecentFinds}
+                              size="small"
+                            >
+                              {t('Clear Recent Finds')}
+                            </Button>
                           </Box>
                         </Box>
                       )}

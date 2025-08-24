@@ -42,9 +42,11 @@ const formatItemName = (name: string): string => {
 const formatTimeAgo = (timestamp: number): string => {
   const now = Date.now();
   const diff = now - timestamp;
+  const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor(diff / 60000);
   const seconds = Math.floor(diff / 1000);
   
+  if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
   if (seconds > 5) return `${seconds}s ago`;
   return 'Just now';

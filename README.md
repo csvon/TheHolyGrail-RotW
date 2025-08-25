@@ -5,6 +5,9 @@ Built with **Electron**, **React**, and **TypeScript**.
 
 > **Modified by PyroSplat** – includes persistence, badges, sound notifications, and UI tweaks.
 
+Also checkout https://github.com/pyrosplat/TheHolyGrail-Public-Tracker - Web app that will interface with this client for public grail tracking!
+
+
 ---
 <!-- Hero / App Overview Screenshot -->
 <p align="center">

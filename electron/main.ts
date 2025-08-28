@@ -595,6 +595,10 @@ app.whenReady()
   .then(async () => {
     setupAudioProtocol();
     await registerListeners();
+    
+    // Clear recent finds on startup
+    itemsDatabase.clearRecentFinds();
+    
     createWindow();
   })
   .catch(e => console.error(e));

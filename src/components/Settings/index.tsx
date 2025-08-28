@@ -61,8 +61,21 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
   const [changelogContent, setChangelogContent] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<{ message: string; success?: boolean } | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    appInfo: true,
+    grailSettings: true,
+    soundSettings: false,
+    overlaySettings: false,
+    webSync: false,
+    dropCalculator: false,
+    streamingTools: false,
+  });
   const { t } = useTranslation();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleAccordionChange = (section: string) => (_event: SyntheticEvent, isExpanded: boolean) => {
+    setExpandedSections(prev => ({ ...prev, [section]: isExpanded }));
+  };
 
   useEffect(() => {
     setStreamPort(window.Main.getStreamPort());
@@ -356,172 +369,231 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <List>
-          {/* App Version */}
-          <ListItem>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              <InfoIcon />
-            </ListItemIcon>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <ListItemText
-                primary={t("App version: ") + packageJson.version}
-                secondary={t("Modified Version of zeddicus-pl/d2rHolyGrail")}
-                sx={{ maxWidth: '60%' }}
-              />
-              <Button
-                variant="outlined"
-                onClick={handleChangelogOpen}
-                startIcon={<HistoryIcon />}
-                size="small"
-              >
-                {t("Changelog")}
-              </Button>
-            </Box>
-          </ListItem>
-          <Divider />
-          
-          {/* Saved Games Folder */}
-          <ListItem button disabled={gameMode === GameMode.Manual}>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              <FolderIcon />
-            </ListItemIcon>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'left', justifyContent: 'space-between' }}>
-              <ListItemText
-                primary={t("Saved games folder")}
-                secondary={appSettings.saveDir || ''}
-                sx={{ maxWidth: '60%' }}
-              />
-              <Button variant="outlined" onClick={handleOpenFolder} size="small">
-                {t("Browse")}
-              </Button>
-            </Box>
-          </ListItem>
-          <Divider />
-          
-          {/* Game Mode */}
-          <ListItem>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              <GroupIcon />
-            </ListItemIcon>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'left', justifyContent: 'space-between' }}>
-              <ListItemText
-                primary={t("Game mode")}
-                secondary={t("Select which types of games you want to include in the list")}
-                sx={{ maxWidth: '60%' }}
-              />
-              <FormControl sx={{ minWidth: 200 }}>
-                <Select
-                  value={gameMode}
-                  onChange={handleGameMode}
-                  size="small"
-                  disabled={isGrailConfigLocked}
-                >
-                  <MenuItem value={GameMode.Softcore}>{t("Only softcore")}</MenuItem>
-                  <MenuItem value={GameMode.Hardcore}>{t("Only hardcore")}</MenuItem>
-                  <MenuItem value={GameMode.Manual}>{t("Manual selection of items")}</MenuItem>
-                </Select>
-                {isGrailConfigLocked && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                    🔒 Locked after first sync - delete grail in webapp to change
-                  </Typography>
-                )}
-              </FormControl>
-            </Box>
-          </ListItem>
-          <Divider />
-          
-          {/* Grail Type */}
-          <ListItem>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              <WineBarIcon />
-            </ListItemIcon>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <ListItemText
-                primary={t("Grail type")}
-                secondary={t("Select what type of items you are looking for")}
-                sx={{ maxWidth: '40%' }}
-              />
-              
-              <Box sx={{ maxWidth: '55%', minWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <FormControl sx={{ minWidth: 200, mb: 2 }}>
-                  <Select
-                    value={grailType}
-                    onChange={handleGrailType}
-                    size="small"
-                    disabled={isGrailConfigLocked}
-                  >
-                    <MenuItem value={GrailType.Both}>{t("Both normal and ethereal items")}</MenuItem>
-                    <MenuItem value={GrailType.Normal}>{t("Only normal items")}</MenuItem>
-                    <MenuItem value={GrailType.Ethereal}>{t("Only ethereal items")}</MenuItem>
-                    <MenuItem value={GrailType.Each}>{t("Normal and ethereal items separately counted")}</MenuItem>
-                  </Select>
-                  {isGrailConfigLocked && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                      🔒 Configuration locked to maintain grail integrity
-                    </Typography>
-                  )}
-                </FormControl>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
-                  <FormControlLabel
-                    control={<Checkbox checked={appSettings.grailRunes} onChange={handleRunes} disabled={isGrailConfigLocked} />}
-                    label={i18n.t`Include Runes`}
-                    sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
-                  />
-                  
-                  <FormControlLabel
-                    control={<Checkbox checked={appSettings.grailRunewords} onChange={handleRunewords} disabled={isGrailConfigLocked} />}
-                    label={i18n.t`Include Runewords`}
-                    sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
-                  />
-                  
-                  {isGrailConfigLocked && (
-                    <Alert severity="info" sx={{ mt: 1, maxWidth: 300 }}>
-                      <Typography variant="body2">
-                        Settings locked after first sync. To change configuration, delete your grail progress in the webapp settings and start fresh.
-                      </Typography>
-                    </Alert>
-                  )}
-
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={!!appSettings.persistFoundOnDrop}
-                        onChange={handlePersistFound}
-                      />
-                    }
-                    label={t('Keep items marked as found after dropping')}
-                    sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
-                  />
-                  
-                  <Box sx={{ mt: 2, alignSelf: 'flex-end' }}>
+        <Box sx={{ p: 2 }}>
+          {/* App Info & Basic Settings */}
+          <Accordion 
+            expanded={expandedSections.appInfo}
+            onChange={handleAccordionChange('appInfo')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <InfoIcon />
+                {t("App Information & Basic Settings")}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                {/* App Version */}
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <InfoIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t("App version: ") + packageJson.version}
+                      secondary={t("Modified Version of zeddicus-pl/d2rHolyGrail")}
+                      sx={{ maxWidth: '60%' }}
+                    />
                     <Button
                       variant="outlined"
-                      color="error"
-                      startIcon={<DeleteForeverIcon />}
-                      onClick={handleClearHistory}
+                      onClick={handleChangelogOpen}
+                      startIcon={<HistoryIcon />}
                       size="small"
                     >
-                      {t('Clear persistent history')}
+                      {t("Changelog")}
                     </Button>
                   </Box>
-                </Box>
-              </Box>
-            </Box>
-          </ListItem>
-          <Divider />
+                </ListItem>
+                <Divider />
+                
+                {/* Saved Games Folder */}
+                <ListItem button disabled={gameMode === GameMode.Manual}>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <FolderIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'left', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t("Saved games folder")}
+                      secondary={appSettings.saveDir || ''}
+                      sx={{ maxWidth: '60%' }}
+                    />
+                    <Button variant="outlined" onClick={handleOpenFolder} size="small">
+                      {t("Browse")}
+                    </Button>
+                  </Box>
+                </ListItem>
+                <Divider />
+                
+                {/* PyroSplat Modification */}
+                <ListItem>
+                  <Box sx={{ width: '100%', textAlign: 'center', py: 2 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#CC5F43', 
+                        fontWeight: 'bold',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      {t("App Modified by PyroSplat")}
+                    </Typography>
+                  </Box>
+                </ListItem>
+              </List>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Grail Configuration */}
+          <Accordion 
+            expanded={expandedSections.grailSettings}
+            onChange={handleAccordionChange('grailSettings')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WineBarIcon />
+                {t("Holy Grail Configuration")}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                {/* Game Mode */}
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <GroupIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'left', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t("Game mode")}
+                      secondary={t("Select which types of games you want to include in the list")}
+                      sx={{ maxWidth: '60%' }}
+                    />
+                    <FormControl sx={{ minWidth: 200 }}>
+                      <Select
+                        value={gameMode}
+                        onChange={handleGameMode}
+                        size="small"
+                        disabled={isGrailConfigLocked}
+                      >
+                        <MenuItem value={GameMode.Softcore}>{t("Only softcore")}</MenuItem>
+                        <MenuItem value={GameMode.Hardcore}>{t("Only hardcore")}</MenuItem>
+                        <MenuItem value={GameMode.Manual}>{t("Manual selection of items")}</MenuItem>
+                      </Select>
+                      {isGrailConfigLocked && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                          🔒 Locked after first sync - delete grail in webapp to change
+                        </Typography>
+                      )}
+                    </FormControl>
+                  </Box>
+                </ListItem>
+                <Divider />
+          
+                {/* Grail Type */}
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <WineBarIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t("Grail type")}
+                      secondary={t("Select what type of items you are looking for")}
+                      sx={{ maxWidth: '40%' }}
+                    />
+                    
+                    <Box sx={{ maxWidth: '55%', minWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <FormControl sx={{ minWidth: 200, mb: 2 }}>
+                        <Select
+                          value={grailType}
+                          onChange={handleGrailType}
+                          size="small"
+                          disabled={isGrailConfigLocked}
+                        >
+                          <MenuItem value={GrailType.Both}>{t("Both normal and ethereal items")}</MenuItem>
+                          <MenuItem value={GrailType.Normal}>{t("Only normal items")}</MenuItem>
+                          <MenuItem value={GrailType.Ethereal}>{t("Only ethereal items")}</MenuItem>
+                          <MenuItem value={GrailType.Each}>{t("Normal and ethereal items separately counted")}</MenuItem>
+                        </Select>
+                        {isGrailConfigLocked && (
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                            🔒 Configuration locked to maintain grail integrity
+                          </Typography>
+                        )}
+                      </FormControl>
+
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
+                        <FormControlLabel
+                          control={<Checkbox checked={appSettings.grailRunes} onChange={handleRunes} disabled={isGrailConfigLocked} />}
+                          label={i18n.t`Include Runes`}
+                          sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
+                        />
+                        
+                        <FormControlLabel
+                          control={<Checkbox checked={appSettings.grailRunewords} onChange={handleRunewords} disabled={isGrailConfigLocked} />}
+                          label={i18n.t`Include Runewords`}
+                          sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
+                        />
+                        
+                        {isGrailConfigLocked && (
+                          <Alert severity="info" sx={{ mt: 1, maxWidth: 300 }}>
+                            <Typography variant="body2">
+                              Settings locked after first sync. To change configuration, delete your grail progress in the webapp settings and start fresh.
+                            </Typography>
+                          </Alert>
+                        )}
+
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={!!appSettings.persistFoundOnDrop}
+                              onChange={handlePersistFound}
+                            />
+                          }
+                          label={t('Keep items marked as found after dropping')}
+                          sx={{ '& .MuiFormControlLabel-label': { width: '200px' } }}
+                        />
+                        
+                        <Box sx={{ mt: 2, alignSelf: 'flex-end' }}>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteForeverIcon />}
+                            onClick={handleClearHistory}
+                            size="small"
+                          >
+                            {t('Clear persistent history')}
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                </ListItem>
+              </List>
+            </AccordionDetails>
+          </Accordion>
 
           {/* Sound Settings */}
-          <ListItem>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              <VolumeUpIcon />
-            </ListItemIcon>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <ListItemText
-                primary={t('Sound Settings')}
-                secondary={t('Configure audio notifications for found items')}
-                sx={{ maxWidth: '40%' }}
-              />
+          <Accordion 
+            expanded={expandedSections.soundSettings}
+            onChange={handleAccordionChange('soundSettings')}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <VolumeUpIcon />
+                {t("Sound Settings")}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <VolumeUpIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t('Sound Settings')}
+                      secondary={t('Configure audio notifications for found items')}
+                      sx={{ maxWidth: '40%' }}
+                    />
               
               <Box sx={{ maxWidth: '65%', minWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <FormControlLabel
@@ -629,8 +701,23 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
               </Box>
             </Box>
           </ListItem>
-          <Divider />
+        </List>
+      </AccordionDetails>
+    </Accordion>
 
+    {/* Overlay Settings */}
+    <Accordion 
+      expanded={expandedSections.overlaySettings}
+      onChange={handleAccordionChange('overlaySettings')}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <PictureInPictureIcon />
+          {t("Overlay Settings")}
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <List>
           {/* Overlay Settings */}
           <ListItem>
             <ListItemIcon sx={{ minWidth: 56 }}>
@@ -764,9 +851,23 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
               </Box>
             </Box>
           </ListItem>
-          <Divider />
+        </List>
+      </AccordionDetails>
+    </Accordion>
 
-          {/* Web Sync Settings */}
+    {/* Web Sync Settings */}
+    <Accordion 
+      expanded={expandedSections.webSync}
+      onChange={handleAccordionChange('webSync')}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CloudUploadIcon />
+          {t("Web Sync Settings")}
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <List>
           <ListItem>
             <ListItemIcon sx={{ minWidth: 56 }}>
               <CloudUploadIcon />
@@ -911,8 +1012,23 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
               </Box>
             </Box>
           </ListItem>
-          <Divider />
-          
+        </List>
+      </AccordionDetails>
+    </Accordion>
+
+    {/* Drop Calculator & Game Settings */}
+    <Accordion 
+      expanded={expandedSections.dropCalculator}
+      onChange={handleAccordionChange('dropCalculator')}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CalculateIcon />
+          {t("Calculator & Game Settings")}
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <List>
           {/* Drop Calculator */}
           <ListItem>
             <ListItemIcon sx={{ minWidth: 56 }}>
@@ -966,18 +1082,22 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
             </Box>
           </ListItem>
         </List>
-        
-        {/* Streaming Tools */}
-        <Divider />
-        <Grid container sx={{ p: 3 }}>
-          <Grid item xs={12}>
-            <Accordion 
-              onChange={(event: SyntheticEvent, expanded: boolean) => {
-                setIframeVisible(expanded);
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>{t("Streaming tools")}</Typography>
+      </AccordionDetails>
+    </Accordion>
+
+    {/* Streaming Tools */}
+    <Accordion 
+      expanded={expandedSections.streamingTools}
+      onChange={(event: SyntheticEvent, expanded: boolean) => {
+        handleAccordionChange('streamingTools')(event, expanded);
+        setIframeVisible(expanded);
+      }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <PictureInPictureIcon />
+          {t("Streaming Tools")}
+        </Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Typography paragraph>
@@ -1005,8 +1125,22 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                 </Box>
               </AccordionDetails>
             </Accordion>
-          </Grid>
-        </Grid>
+
+            {/* GitHub Issue Reporting Link */}
+            <Box sx={{ mt: 4, textAlign: 'center', py: 3, borderTop: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t('Found a bug or have a suggestion?')}
+              </Typography>
+              <Button
+                variant="text"
+                onClick={() => window.Main.openUrl("https://github.com/pyrosplat/TheHolyGrail")}
+                sx={{ textDecoration: 'underline' }}
+                startIcon={<LinkIcon />}
+              >
+                {t('Report an Issue on GitHub')}
+              </Button>
+            </Box>
+        </Box>
       </Dialog>
 
       {/* Changelog Dialog */}

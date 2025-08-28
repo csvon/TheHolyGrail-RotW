@@ -1,20 +1,28 @@
 CHANGELOG:
 
-V.2.7.9 (Features)
- - Add recent item finds (optional) to the game overlay
+v.2.8.0 (Features)
+ - Bugfix mapped item display names to recently found overlay 
+ - Bugfix Increase recent items font size
+ - Bugfix restarting the app now clears the recently found items
+ - Added API connection in settings for (future) public grail tracking
+ - API lock features to sync with web app
+ - Modified layout of settings page
+
+v.2.7.9 (Features)
+ - Added recent item finds (optional) to the game overlay
  - Added settings to adjust how many recent items to display
 
-V.2.7.8 (Features)
+v.2.7.8 (Features)
  - Added Overlay - Show stats over game window (drag to place )
  - Added control size slider for overlay widget in settings
 
-V.2.7.7 (Features)
+v.2.7.7 (Features)
  - Added audio settings - pick your own sound file and adjust volume
  - Added changelog to settings
 
 v.2.7.6 (Bug Fixes)
- - Proper runeword counts to include all runewords (D2R)/(Ladder)
- - Bug Fix to detecting file changes when adding, removing or modifying files (saved game directory)
+ - Bugfix to include all runewords (D2R)/(Ladder)
+ - Bugfix to detecting file changes when adding, removing or modifying files (saved game directory)
 
 v.2.7.5 (New Fork by PyroSplat)
  - Theme and font changes 

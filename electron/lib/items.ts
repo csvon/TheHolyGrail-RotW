@@ -28,7 +28,7 @@ class ItemsStore {
   filesChanged: boolean;
   readingFiles: boolean;
   itemNotes: ItemNotes | null;
-  recentFinds: Array<{name: string, type: string, timestamp: number}>;
+  recentFinds: Array<{ name: string; type: string; timestamp: number; ethereal?: boolean }>;
 
   everFound: Record<string, boolean>;
 
@@ -63,7 +63,7 @@ class ItemsStore {
     return this.everFound || {};
   };
 
-  getRecentFinds = (): Array<{name: string, type: string, timestamp: number}> => {
+  getRecentFinds = (): Array<{ name: string; type: string; timestamp: number; ethereal?: boolean }> => {
     return this.recentFinds || [];
   };
 
@@ -77,17 +77,17 @@ class ItemsStore {
   getItemCategory = (itemId: string, itemName: string, isEthereal: boolean = false): string => {
     const settings = settingsStore.getSettings();
     const simplifiedId = simplifyItemName(itemId);
-    
+
     // Check if it's a rune
     if (runesSeed[itemId.toLowerCase()] || runesSeed[simplifiedId]) {
       return 'Rune';
     }
-    
+
     // Check if it's a runeword
     if (runewordsSeed[simplifiedId] || itemId.startsWith('runeword')) {
       return 'Runeword';
     }
-    
+
     // Check if it's in sets
     const holyGrailData = getHolyGrailSeedData(settings, false);
     if (holyGrailData.sets) {
@@ -96,7 +96,7 @@ class ItemsStore {
         return isEthereal ? 'Ethereal Set' : 'Set';
       }
     }
-    
+
     // Check if it's a unique item
     if (holyGrailData.uniques) {
       const uniquesFlat = flattenObject(holyGrailData.uniques);
@@ -104,36 +104,36 @@ class ItemsStore {
         return isEthereal ? 'Ethereal Unique' : 'Unique';
       }
     }
-    
+
     // If ethereal but not categorized above
     if (isEthereal) {
       return 'Ethereal';
     }
-    
+
     return 'Item';
   };
 
-  addRecentFind = (itemName: string, itemType: string = '') => {
+  addRecentFind = (itemName: string, itemType: string = '', ethereal: boolean = false) => {
     let timestamp = Date.now();
     this.recentFinds = this.recentFinds || [];
-    
+
     // Ensure unique timestamps by checking if the latest timestamp already exists
     if (this.recentFinds.length > 0 && this.recentFinds[0].timestamp >= timestamp) {
       timestamp = this.recentFinds[0].timestamp + 1;
     }
-    
+
     // Remove item if it already exists (avoid duplicates)
     this.recentFinds = this.recentFinds.filter(find => find.name !== itemName);
-    
-    // Add to beginning of array
-    this.recentFinds.unshift({ name: itemName, type: itemType, timestamp });
-    
+
+    // Add to beginning of array (now includes ethereal flag)
+    this.recentFinds.unshift({ name: itemName, type: itemType, timestamp, ethereal });
+
     // Keep only the configured number of items (default to 5)
     const settings = settingsStore.getSettings();
     const maxItems = settings.overlayRecentFindsCount || 5;
     this.recentFinds = this.recentFinds.slice(0, maxItems);
-    
-    // Save to storage
+
+    // Save to storage (unchanged)
     storage.set('recentFinds', this.recentFinds, (error) => {
       if (error) console.log('Error saving recent finds:', error);
     });
@@ -158,7 +158,7 @@ class ItemsStore {
     for (const itemId of newItemIds) {
       if (!currentItemIds.has(itemId)) {
         hasNewItems = true;
-        
+
         // Get display name and determine category from new results
         let displayName = itemId;
         let isEthereal = false;
@@ -168,12 +168,12 @@ class ItemsStore {
           displayName = newResults.ethItems[itemId].name || itemId;
           isEthereal = true;
         }
-        
+
         // Determine item category
         const itemCategory = this.getItemCategory(itemId, displayName, isEthereal);
-        
+
         // Add to recent finds
-        this.addRecentFind(displayName, itemCategory);
+        this.addRecentFind(displayName, itemCategory, isEthereal);
       }
     }
     return hasNewItems;
@@ -370,8 +370,11 @@ class ItemsStore {
         .then((result) => {
           results.stats[saveName] = 0;
           result.forEach((item) => {
-            let name = item.unique_name || item.set_name || '';
-            name = name.toLowerCase().replace(/[^a-z0-9]/gi, '');
+            let originalName = item.unique_name || item.set_name || '';
+            let name = originalName.toLowerCase().replace(/[^a-z0-9]/gi, '');
+            // Fix double apostrophes in display name
+            let displayName = originalName.replace(/'{2,}/g, "'");
+            
             if (name.indexOf('rainbowfacet') !== -1) {
               let type = '';
               let skill = '';
@@ -384,10 +387,13 @@ class ItemsStore {
                 if (attr.name === 'passive_ltng_mastery') { skill = 'lightning' }
               })
               name = name + skill + type;
+              displayName = `Rainbow Facet: ${skill.charAt(0).toUpperCase() + skill.slice(1)} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
             } else if (isRune(item)) {
               name = runesMapping[item.type as RuneType].name.toLowerCase();
+              displayName = runesMapping[item.type as RuneType].name;
             } else if (item.type === 'runeword') {
               name = item.runeword_name;
+              displayName = item.runeword_name;
             } else if (!flatItems[name] && (item.ethereal && !ethFlatItems[name])) {
               return;
             } else if (name === '') {
@@ -406,13 +412,15 @@ class ItemsStore {
               results[key][name].inSaves[saveName].push(savedItem);
             } else {
               results[key][name] = {
-                name,
+                name: displayName,
                 inSaves: {},
                 type: item.type,
               }
               results[key][name].inSaves[saveName] = [savedItem];
             }
-            if (isRune(item) && !item.socketed) {
+            // Add all runes (socketed or not) to availableRunes for grail tracking
+            // But distinguish between socketed and available for use
+            if (isRune(item)) {
               if (results.availableRunes[name]) {
                 if (!results.availableRunes[name].inSaves[saveName]) {
                   results.availableRunes[name].inSaves[saveName] = [];
@@ -420,7 +428,7 @@ class ItemsStore {
                 results.availableRunes[name].inSaves[saveName].push(savedItem);
               } else {
                 results.availableRunes[name] = {
-                  name,
+                  name: displayName,
                   inSaves: {},
                   type: item.type,
                 }
@@ -472,7 +480,7 @@ class ItemsStore {
 
       this.currentData = results;
       updateDataToListeners();
-      
+
       // Sync to web if enabled and new items were found
       if (hasNewItems) {
         webSyncManager.syncProgress().catch(console.error);

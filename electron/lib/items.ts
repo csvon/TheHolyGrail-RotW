@@ -520,11 +520,11 @@ class ItemsStore {
       return firstSectionSize > 0 && firstSectionSize <= buffer.length;
     };
 
-    const extractFirstFiveModernJMSections = (buffer: Buffer): Buffer => {
+    const extractFirstSixModernJMSections = (buffer: Buffer): Buffer => {
       const sections: Buffer[] = [];
       let offset = 0;
 
-      while (offset + 68 <= buffer.length && sections.length < 5) {
+      while (offset + 68 <= buffer.length && sections.length < 6) {
         if (readUInt32LE(buffer, offset) !== 0xaa55aa55) {
           break;
         }
@@ -615,7 +615,7 @@ class ItemsStore {
         });
         break;
       case '.d2i': {
-        const stashContent = isModern105D2I(content) ? extractFirstFiveModernJMSections(content) : content;
+        const stashContent = isModern105D2I(content) ? extractFirstSixModernJMSections(content) : content;
         await d2stash.read(stashContent).then(parseStash);
         break;
       }

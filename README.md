@@ -1,98 +1,89 @@
-## Usage
-```bash
-yarn start # Also populates recent finds list for testing
+# The Holy Grail (Diablo II: Resurrected - Reign of the Warlock)
 
-yarn package
-```
+Fork of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail) with additional support and quality-of-life improvements for **Reign of the Warlock (RotW)**.
 
----
----
-**Original README:**
-# Holy Grail (Diablo II: Resurrected)
-
-Automatic tracker for the Diablo 2 Resurrected **Holy Grail** challenge (offline characters).  
+This desktop app scans your Diablo II: Resurrected offline save files and tracks your **Holy Grail** progress.
 Built with **Electron**, **React**, and **TypeScript**.
 
-> **Modified by PyroSplat** – includes persistence, badges, sound notifications, and UI tweaks.
+Also check out [TheHolyGrail Public Tracker](https://github.com/pyrosplat/TheHolyGrail-Public-Tracker) (web app integration project).
 
-Also checkout https://github.com/pyrosplat/TheHolyGrail-Public-Tracker - Web app that will interface with this client for public grail tracking!
-
-
----
-<!-- Hero / App Overview Screenshot -->
 <p align="center">
-  <img src="docs/images/app-hero.png" alt="Holy Grail App Overview" width="900"/>
+  <img src="docs/images/app-hero.png" alt="Holy Grail App Overview" width="900" />
 </p>
 
-## ✨ Features
+## What's New In This Fork
 
-- **Sundered charms** are included in the grail tracker.
-- **Persistent found items** (optional):  
-  Toggle in **Settings → "Persist found on drop"** to count items you've found historically—no need to keep them on mules or in stash.
-- **"Previously found" badge** + subtle grey checkmark beside items that are counted due to history (not currently in stash).
-- **Clear persistent history** (with confirmation dialog):  
-  Wipes the "Previously found" history and updates totals/badges instantly.  
-  > ⚠️ **Warning:** This is **permanent**. Your stash is not touched.
-- **Custom Sound notifications** for newly found items:
-  - Customizable volume control
-  - Support for custom sound files (WAV, MP3, OGG)
-- **Theme & font tweaks** for a cleaner look.
+### RotW Support
+- Adds support for the new **Warlock** character.
+- Adds basic **shared stash** parsing for RotW:
+  - Reads all 5 shared stash pages.
+  - Reads rune presence from the runes tab (limited support).
 
-## 🔊 Sound Notifications
+### New Features
+- Recent finds accordion on the app home screen.
+- Item browser to inspect owned items and see which character holds each item (click on the char name when inspecting your owned items).
 
-Get audio alerts when you find new grail items!
+  <img src="docs/images/item-hero.png" alt="Holy Grail Item Browser" width="350" />
 
-   _Screenshot: sound control panel:_  
-   ![Sound Settings Panel](docs/images/sound_control.png "Sound settings with volume and custom file options")
+### Current Limitations
+- Materials tab is not parsed.
+- Rune quantities are not decoded (presence only).
+- Newly added RotW items are not supported yet.
 
-> **Tip**: Use a distinctive sound that won't get lost in game audio. Short, clear notification sounds work best!
+## Core Features of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail)
 
----
+- Include **Sunder charms** in grail tracking.
+- Optional **persistent found items** mode:
+  - Enable in **Settings -> Persist found on drop**.
+  - Lets you count items found historically, even if no longer stored.
+- **Previously found** indicators for history-counted items.
+- Ability to clear persistent history with confirmation.
+- Display live grail progress over the game window without alt-tabbing.
+  - Compact, high-contrast design.
+  - Adjustable size in settings.
+  - Optional recent finds list.
+- **Sound notifications** for newly found items:
+  - Audio alerts can be configured for newly found items.
+  - Volume control
+  - Custom sound file support (`.wav`, `.mp3`, `.ogg`)
+- Theme and font customization options.
 
-## 🪟 Overlay: Live Grail Stats (On-Top / Stream-Ready)
+## Getting Started
 
-Display your live Holy Grail progress right over the game window—perfect without alt-tabbing.
-
-<p align="center"> <img src="docs/images/overlay_v1.png" alt="Overlay showing live grail stats over D2R" width="900"/> </p>
-
-**Features**
-- Compact, high-contrast design that stays readable over D2R
-- Adjustable size in settings
-- Optional recent finds item list
-
----
-
-# Info for developers
-
-## Installation
-
-Use a package manager of your choice (npm, yarn, etc.) in order to install all dependencies
+### Install
 
 ```bash
-yarn
+yarn install
 ```
 
-## Usage
-
-Just run `start` script.
+### Run (Development)
 
 ```bash
 yarn start
 ```
 
-## Packaging
-
-To generate the project package based on the OS you're running on, just run:
+### Package App
 
 ```bash
 yarn package
 ```
 
-## Contributing
+### Build Windows Installer
 
-Pull requests are always welcome 😃.
+```bash
+yarn build
+```
+
+## Available Scripts
+
+- `yarn start` - Starts Electron app in development mode.
+- `yarn package` - Packages app using Electron Forge.
+- `yarn build` - Packages app and builds Windows installer with Electron Builder.
+- `yarn build-win` - Builds Windows installer.
+- `yarn make` - Builds distributables via Electron Forge makers.
+- `yarn release` - Publishes release artifacts via Electron Forge.
+- `yarn lint` - Runs ESLint.
 
 ## License
 
 [ISC](https://choosealicense.com/licenses/isc/)
-

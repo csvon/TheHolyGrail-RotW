@@ -28,12 +28,6 @@ export function Greetings({ uiState, onFileClick, onManualClick }: GreetingsProp
         <Language />
       </ButtonPanel>
       <h1>{t('The Holy Grail')}</h1>
-      <h6>
-        {t('Modified by')}&nbsp;
-          <a href="#">
-            PyroSplat
-          </a>
-      </h6>
       <Image
         src={logo}
         alt=""

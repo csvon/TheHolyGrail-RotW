@@ -182,12 +182,6 @@ export function List({ fileReaderResponse, appSettings, itemNotes, playSound }: 
             alt=""
           />
           <h1>{t('The Holy Grail')}</h1>
-          <h6>
-            {t('Modified by')}&nbsp;
-            <a href="#">
-              PyroSplat
-            </a>
-          </h6>
         </Logo>
         {tab !== TabState.None && !search.length ?
           <Tabs

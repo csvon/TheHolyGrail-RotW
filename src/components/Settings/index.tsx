@@ -26,14 +26,12 @@ import WineBarIcon from '@mui/icons-material/WineBar';
 import AudioFileIcon from '@mui/icons-material/AudioFile';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DropCalcSettings from './DropCalcSettings';
-import packageJson from '../../../package.json';
 import i18n from '../../i18n';
 import { settingsKeys } from '../../utils/defaultSettings';
 import cc from '../../../assets/cc.svg';
 import { clearPrevUniqItemsFound } from '../../utils/objects';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { testGrailSound } from '../../utils/soundUtils';
-import HistoryIcon from '@mui/icons-material/History';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import LinkIcon from '@mui/icons-material/Link';
@@ -57,8 +55,6 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
   const [iframeVisible, setIframeVisible] = useState(false);
   const [streamPort, setStreamPort] = useState(0);
   const [soundFileError, setSoundFileError] = useState<string>('');
-  const [changelogOpen, setChangelogOpen] = useState(false);
-  const [changelogContent, setChangelogContent] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<{ message: string; success?: boolean } | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -319,29 +315,6 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
     }
   };
 
-  const handleChangelogOpen = async () => {
-    try {
-   
-      let content = '';
-      if (window.Main && typeof window.Main.readFile === 'function') {
-        content = await window.Main.readFile('../../../assets/license.txt');
-      } else if (window.Main && typeof window.Main.getChangelogContent === 'function') {
-        content = await window.Main.getChangelogContent();
-      } else {
-      }
-      
-      setChangelogContent(content);
-      setChangelogOpen(true);
-    } catch (error) {
-      console.error('Error reading changelog:', error);
-      setChangelogOpen(true);
-    }
-  };
-
-  const handleChangelogClose = () => {
-    setChangelogOpen(false);
-  };
-
   const gameMode: GameMode = appSettings.gameMode || GameMode.Softcore;
   const grailType: GrailType = appSettings.grailType || GrailType.Both;
   const currentVolume = Math.round((appSettings.soundVolume ?? 1) * 100);
@@ -383,42 +356,11 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <InfoIcon />
-                {t("App Information & Basic Settings")}
+                {t("Basic Settings")}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <List>
-                {/* App Version */}
-                <ListItem>
-                  <ListItemIcon sx={{ minWidth: 56 }}>
-                    <InfoIcon />
-                  </ListItemIcon>
-                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <ListItemText
-                      primary={t("App version: ") + packageJson.version}
-                      secondary={t("Modified Version of zeddicus-pl/d2rHolyGrail")}
-                      sx={{ maxWidth: '60%' }}
-                    />
-                    <Button
-                      variant="outlined"
-                      onClick={handleChangelogOpen}
-                      startIcon={<HistoryIcon />}
-                      size="small"
-                      sx={{
-                        borderColor: '#CC5F43',
-                        color: '#CC5F43',
-                        '&:hover': {
-                          borderColor: '#CC5F43',
-                          backgroundColor: 'rgba(204, 95, 67, 0.08)',
-                        }
-                      }}
-                    >
-                      {t("Changelog")}
-                    </Button>
-                  </Box>
-                </ListItem>
-                <Divider />
-                
                 {/* Saved Games Folder */}
                 <ListItem button disabled={gameMode === GameMode.Manual}>
                   <ListItemIcon sx={{ minWidth: 56 }}>
@@ -449,21 +391,6 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                 </ListItem>
                 <Divider />
                 
-                {/* PyroSplat Modification */}
-                <ListItem>
-                  <Box sx={{ width: '100%', textAlign: 'center', py: 2 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#CC5F43', 
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {t("App modified by PyroSplat")}
-                    </Typography>
-                  </Box>
-                </ListItem>
               </List>
             </AccordionDetails>
           </Accordion>
@@ -1322,71 +1249,6 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
               </AccordionDetails>
             </Accordion>
 
-            {/* GitHub Issue Reporting Link */}
-            <Box sx={{ mt: 4, textAlign: 'center', py: 3, borderTop: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t('Found a bug or have a suggestion?')}
-              </Typography>
-              <Button
-                variant="text"
-                onClick={() => window.Main.openUrl("https://github.com/pyrosplat/TheHolyGrail")}
-                sx={{ 
-                  textDecoration: 'underline',
-                  color: '#CC5F43',
-                  '&:hover': {
-                    color: '#CC5F43',
-                    backgroundColor: 'rgba(204, 95, 67, 0.08)',
-                  }
-                }}
-                startIcon={<LinkIcon />}
-              >
-                {t('Report an Issue on GitHub')}
-              </Button>
-            </Box>
-        </Box>
-      </Dialog>
-
-      {/* Changelog Dialog */}
-      <Dialog
-        open={changelogOpen}
-        onClose={handleChangelogClose}
-        maxWidth="md"
-        fullWidth
-        scroll="paper"
-      >
-        <AppBar sx={{ position: 'relative' }}>
-          <Toolbar>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              {t('Changelog')}
-            </Typography>
-            <IconButton
-              edge="end"
-              color="inherit"
-              onClick={handleChangelogClose}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
-        <Box sx={{ p: 3 }}>
-          <Typography
-            component="pre"
-            sx={{
-              whiteSpace: 'pre-wrap',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem',
-              lineHeight: 1.5,
-              maxHeight: '70vh',
-              overflow: 'auto',
-              bgcolor: 'rgba(0,0,0,0.1)',
-              p: 2,
-              borderRadius: 1,
-              border: '1px solid rgba(255,255,255,0.1)'
-            }}
-          >
-            {changelogContent}
-          </Typography>
         </Box>
       </Dialog>
     </>

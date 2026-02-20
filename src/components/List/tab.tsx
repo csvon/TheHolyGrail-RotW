@@ -14,7 +14,7 @@ import { TabState, title } from '.';
 import Popup from './popup';
 import { Statistics } from '../Stats';
 import { ChangeEvent, MouseEvent } from 'react';
-import { countInSaves, FlatItemsCache, flattenObject, simplifyItemName } from '../../utils/objects';
+import { countInSaves, countUnusedInSaves, FlatItemsCache, flattenObject, simplifyItemName } from '../../utils/objects';
 import { AvailableRunesLine, CountLabel, CountLabelContainer, Rune, RuneBg, RuneIcon, RuneList, RuneName } from './styles';
 import { runesMapping } from '../../../electron/lib/runesMapping';
 import { runewordsMapping } from '../../../electron/lib/runewordsMapping';
@@ -108,7 +108,7 @@ export function TabPanel(props: TabPanelProps) {
 
   const calculatorRunes = Object.keys(availableRunes).reduce((acc, runeName) => {
     // @ts-ignore
-    acc[runeName] = countInSaves(availableRunes[runeName]);
+    acc[runeName] = countUnusedInSaves(availableRunes[runeName]);
     return acc;
   }, {});
   const calculatorLink = "https://d2runewizard.com/runeword-calculator?isIncludeLadderOnly=true&isLodOnly="
@@ -500,7 +500,7 @@ export function TabPanel(props: TabPanelProps) {
                                     )}
                                   </div>
                                   {(availableRunes && availableRunes[itemName] && availableRunes[itemName])
-                                    ? <AvailableRunesLine>{countInSaves(availableRunes[itemName])} <Trans>unused</Trans></AvailableRunesLine>
+                                    ? <AvailableRunesLine>{countUnusedInSaves(availableRunes[itemName])} <Trans>unused</Trans></AvailableRunesLine>
                                     : null
                                   }
                                 </div>

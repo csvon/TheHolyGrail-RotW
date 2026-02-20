@@ -304,6 +304,14 @@ export const countInSaves = (item: Item) => {
   );
 }
 
+export const countUnusedInSaves = (item: Item) => {
+  if (!item.inSaves) return 0;
+  return Object.values(item.inSaves).reduce(
+    (acc, itemsInSave) => acc + itemsInSave.filter((i) => !i.socketed).length,
+    0
+  );
+}
+
 // export const getRuneRecipe = (targetRune: string, availableRunes: AvailableRunes) => {
 //   if (Object.keys(runesSeed).indexOf(targetRune) === 0) {
 //     return null;

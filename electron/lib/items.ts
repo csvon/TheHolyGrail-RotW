@@ -421,6 +421,36 @@ class ItemsStore {
               ethereal: !!item.ethereal,
               ilevel: item.level,
               socketed: !!item.socketed,
+              type: item.type,
+              typeName: item.type_name,
+              quality: item.quality,
+              uniqueName: item.unique_name,
+              setName: item.set_name,
+              runewordName: item.runeword_name,
+              rareName: item.rare_name,
+              rareName2: item.rare_name2,
+              magicPrefixName: item.magic_prefix_name,
+              magicSuffixName: item.magic_suffix_name,
+              defenseRating: item.defense_rating,
+              currentDurability: item.current_durability,
+              maxDurability: item.max_durability,
+              requiredStrength: item.reqstr,
+              requiredDexterity: item.reqdex,
+              requiredLevel: item.magic_attributes
+                ?.find((attr) => attr && attr.name === 'item_levelreq')
+                ?.values?.[0],
+              totalSockets: item.total_nr_of_sockets,
+              baseDamage: item.base_damage,
+              displayedMagicAttributes: Array.from(new Set(
+                (item.displayed_magic_attributes || [])
+                  .map((attr) => attr && attr.description)
+                  .filter((description) => !!description)
+              )),
+              displayedRunewordAttributes: Array.from(new Set(
+                (item.displayed_runeword_attributes || [])
+                  .map((attr) => attr && attr.description)
+                  .filter((description) => !!description)
+              )),
             }
             let key: 'items' | 'ethItems' = settings.grailType === GrailType.Each && savedItem.ethereal ? 'ethItems' : 'items';
             if (results[key][name]) {

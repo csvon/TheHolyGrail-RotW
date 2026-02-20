@@ -6,6 +6,8 @@ import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Button, Chip, DialogActions, Grid, TextField, Tooltip, Typography } from '@mui/material';
 import { GameMode, ItemDetails, Settings, SilospenItem } from '../../@types/main.d';
 import Table from '@mui/material/Table';
@@ -39,6 +41,51 @@ type PopupProps = {
   itemNote: string,
 }
 
+const BLUE_AFFIX_COLOR = '#4e6edf';
+
+const cleanPropertyLine = (value?: string): string | null => {
+  if (!value) return null;
+  const cleaned = value
+    .replace(/%\+d/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.length ? cleaned : null;
+}
+
+const getItemPalette = (item: ItemDetails) => {
+  if (item.runewordName || item.quality === 2 || item.quality === 3) {
+    return { name: '#c7b377', base: '#8e8e73' };
+  }
+  if (item.uniqueName || item.quality === 7) {
+    return { name: '#c7b377', base: '#c7b377' };
+  }
+  if (item.setName || item.quality === 5) {
+    return { name: '#5ca85c', base: '#5ca85c' };
+  }
+  if (item.quality === 8) {
+    return { name: '#d69747', base: '#d69747' };
+  }
+  if (item.rareName || item.rareName2 || item.quality === 6) {
+    return { name: '#d8c870', base: '#d8c870' };
+  }
+  if (item.magicPrefixName || item.magicSuffixName || item.quality === 4) {
+    return { name: BLUE_AFFIX_COLOR, base: BLUE_AFFIX_COLOR };
+  }
+  return { name: '#d7d7d7', base: '#d7d7d7' };
+}
+
+const getDisplayItemName = (fallback: string, item: ItemDetails): string => {
+  if (item.uniqueName) return item.uniqueName;
+  if (item.setName) return item.setName;
+  if (item.runewordName) return item.runewordName;
+  const rareName = [item.rareName, item.rareName2, item.typeName].filter(Boolean).join(' ').trim();
+  if (rareName.length) return rareName;
+  const magicName = [item.magicPrefixName, item.typeName, item.magicSuffixName].filter(Boolean).join(' ').trim();
+  if (magicName.length) return magicName;
+  if (item.typeName) return item.typeName;
+  return fallback;
+}
+
 export default function Popup({
   itemType,
   itemName,
@@ -54,6 +101,9 @@ export default function Popup({
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState('');
   const [drop, setDrop] = useState<ReactChild | null>(null);
+  const [itemDetailsOpen, setItemDetailsOpen] = useState(false);
+  const [selectedSaveItems, setSelectedSaveItems] = useState<ItemDetails[]>([]);
+  const [selectedSaveIndex, setSelectedSaveIndex] = useState(0);
 
   const diablo2ioUrl = diablo2ioMapping[itemName] || 'https://diablo2.io/';
 
@@ -100,6 +150,25 @@ export default function Popup({
     setNoteOpen(false);
   }
 
+  const openItemDetails = (details: ItemDetails[]) => {
+    if (!details || !details.length) return;
+    setSelectedSaveItems(details);
+    setSelectedSaveIndex(0);
+    setItemDetailsOpen(true);
+  }
+
+  const selectedItem = selectedSaveItems[selectedSaveIndex];
+  const itemNameForDetails = selectedItem ? getDisplayItemName(fullItemName, selectedItem) : fullItemName;
+  const colors = selectedItem ? getItemPalette(selectedItem) : { name: '#d7d7d7', base: '#d7d7d7' };
+  const extraLines = selectedItem
+    ? Array.from(new Set(
+      [
+        ...(selectedItem.displayedMagicAttributes || []),
+        ...(selectedItem.displayedRunewordAttributes || []),
+      ].map(cleanPropertyLine).filter(Boolean) as string[]
+    ))
+    : [];
+
   return (
     <>
       <div onClick={handleClickOpen} style={{ position: 'relative' }}>
@@ -135,6 +204,7 @@ export default function Popup({
                     ? <>{saveFile}<sub>&nbsp;x{saveFiles[saveFile].length}</sub></>
                     : saveFile
                 }
+                onClick={() => openItemDetails(saveFiles[saveFile])}
                 style={{ marginRight: 5 }}
               />)}
             </small>
@@ -149,6 +219,7 @@ export default function Popup({
                   ? <>{saveFile}<sub>&nbsp;x{ethSaveFiles[saveFile].length}</sub></>
                     : saveFile
                 }
+                onClick={() => openItemDetails(ethSaveFiles[saveFile])}
                 style={{ marginRight: 5 }}
               />)}
             </small>
@@ -256,6 +327,86 @@ export default function Popup({
           <Button onClick={() => setNoteOpen(false)}><Trans>Cancel</Trans></Button>
           <Button onClick={handleNoteChanged}><Trans>Save</Trans></Button>
         </DialogActions>
+      </Dialog>
+      <Dialog open={itemDetailsOpen} fullWidth maxWidth="xs" onClose={() => setItemDetailsOpen(false)}>
+        <DialogTitle sx={{ pb: 1 }}>
+          <div style={{ textAlign: 'center', color: colors.name, lineHeight: 1.2 }}>{itemNameForDetails}</div>
+          {selectedItem?.typeName && (
+            <div style={{ textAlign: 'center', color: colors.base, fontWeight: 400, lineHeight: 1.2 }}>
+              {selectedItem.typeName}
+            </div>
+          )}
+          <IconButton
+            aria-label="close-item-details"
+            onClick={() => setItemDetailsOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {!selectedItem ? (
+            <Typography variant="body2" style={{ opacity: 0.8 }}>
+              <Trans>No item details available.</Trans>
+            </Typography>
+          ) : (
+            <div style={{ textAlign: 'center', lineHeight: 1.25 }}>
+              {typeof selectedItem.defenseRating === 'number' && <div>Defense: {selectedItem.defenseRating}</div>}
+              {typeof selectedItem.baseDamage?.mindam === 'number' && typeof selectedItem.baseDamage?.maxdam === 'number' && (
+                <div>One-Hand Damage: {selectedItem.baseDamage.mindam} to {selectedItem.baseDamage.maxdam}</div>
+              )}
+              {typeof selectedItem.baseDamage?.twohandmindam === 'number' && typeof selectedItem.baseDamage?.twohandmaxdam === 'number' && (
+                <div>Two-Hand Damage: {selectedItem.baseDamage.twohandmindam} to {selectedItem.baseDamage.twohandmaxdam}</div>
+              )}
+              {typeof selectedItem.currentDurability === 'number' && typeof selectedItem.maxDurability === 'number' && (
+                <div>Durability: {selectedItem.currentDurability} of {selectedItem.maxDurability}</div>
+              )}
+              {typeof selectedItem.requiredStrength === 'number' && selectedItem.requiredStrength > 0 && (
+                <div>Required Strength: {selectedItem.requiredStrength}</div>
+              )}
+              {typeof selectedItem.requiredDexterity === 'number' && selectedItem.requiredDexterity > 0 && (
+                <div>Required Dexterity: {selectedItem.requiredDexterity}</div>
+              )}
+              {typeof selectedItem.requiredLevel === 'number' && selectedItem.requiredLevel > 0 && (
+                <div>Required Level: {selectedItem.requiredLevel}</div>
+              )}
+              {selectedItem.ethereal && <div>Ethereal</div>}
+              {typeof selectedItem.totalSockets === 'number' && selectedItem.totalSockets > 0 && (
+                <div>Socketed ({selectedItem.totalSockets})</div>
+              )}
+              {extraLines.length > 0 && <div style={{ marginTop: 8 }} />}
+              {extraLines.map((line, lineIndex) => (
+                <div key={`${line}-${lineIndex}`} style={{ color: BLUE_AFFIX_COLOR }}>{line}</div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+        {selectedSaveItems.length > 1 && (
+          <DialogActions sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="caption" sx={{ opacity: 0.8, pl: 1 }}>
+              {selectedSaveIndex + 1}/{selectedSaveItems.length}
+            </Typography>
+            <div>
+            <IconButton
+              onClick={() => setSelectedSaveIndex((index) => Math.max(0, index - 1))}
+              disabled={selectedSaveIndex <= 0}
+            >
+              <ChevronLeftIcon />
+            </IconButton>
+            <IconButton
+              onClick={() => setSelectedSaveIndex((index) => Math.min(selectedSaveItems.length - 1, index + 1))}
+              disabled={selectedSaveIndex >= selectedSaveItems.length - 1}
+            >
+              <ChevronRightIcon />
+            </IconButton>
+            </div>
+          </DialogActions>
+        )}
       </Dialog>
     </>  
   );

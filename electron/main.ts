@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog, shell, session } from 'electron';
-import { writeFile } from 'fs';
+import { writeFile, statSync, existsSync } from 'fs';
 import { extname, join } from 'path';
 import { IpcMainEvent } from 'electron/renderer';
 import WindowStateKeeper from "electron-window-state";
@@ -11,7 +11,6 @@ import { registerUpdateDownloader } from './lib/update';
 import { getEverFound, markEverFound, clearEverFound } from './lib/everFound';
 import { webSyncManager } from './lib/webSync';
 import * as path from 'path'; // Add this line for the full path module
-import { statSync } from 'fs';
 import { protocol } from 'electron';
 
 // these constants are set by the build stage
@@ -178,8 +177,23 @@ function createWindow() {
     defaultHeight: 700,
   });
 
+  const iconFileNames = process.platform === 'win32'
+    ? ['icon.ico', 'icon.png']
+    : ['icon.png', 'icon.ico'];
+  const iconBaseDirs = [
+    join(__dirname, 'assets'),
+    join(__dirname, '..', 'assets'),
+    join(process.resourcesPath, 'assets'),
+    join(process.resourcesPath, 'app.asar.unpacked', 'assets'),
+    join(app.getAppPath(), 'assets'),
+    join(assetsPath, 'assets'),
+  ];
+  const resolvedIconPath = iconBaseDirs
+    .flatMap((baseDir) => iconFileNames.map((fileName) => join(baseDir, fileName)))
+    .find((candidatePath) => existsSync(candidatePath));
+
   mainWindow = new BrowserWindow({
-    icon: join(assetsPath, 'assets', 'icon.png'),
+    icon: resolvedIconPath,
     x: mainWindowState.x,
     y: mainWindowState.y,
     width: mainWindowState.width,

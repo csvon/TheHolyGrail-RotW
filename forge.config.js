@@ -14,7 +14,9 @@ if (WebpackPlugin && WebpackPlugin.default) {
 }
 
 module.exports = {
-  packagerConfig: {},
+  packagerConfig: {
+    icon: path.resolve(__dirname, 'assets', 'icon'),
+  },
   rebuildConfig: {},
   makers: [],
   plugins: [

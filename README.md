@@ -68,22 +68,6 @@ yarn start
 yarn package
 ```
 
-### Build Windows Installer
-
-```bash
-yarn build
-```
-
-## Available Scripts
-
-- `yarn start` - Starts Electron app in development mode.
-- `yarn package` - Packages app using Electron Forge.
-- `yarn build` - Packages app and builds Windows installer with Electron Builder.
-- `yarn build-win` - Builds Windows installer.
-- `yarn make` - Builds distributables via Electron Forge makers.
-- `yarn release` - Publishes release artifacts via Electron Forge.
-- `yarn lint` - Runs ESLint.
-
 ## License
 
 [ISC](https://choosealicense.com/licenses/isc/)

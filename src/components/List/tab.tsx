@@ -119,7 +119,8 @@ export function TabPanel(props: TabPanelProps) {
   let itemList = sets || runewords || runes || merge(items || {}, ethItems || {});
   if (value === index) {
     if (itemList) {
-      flatItems = flattenObject(items || {}, getCacheKey(index, false, grailType));
+      // Sets are passed via `sets`, not `items`, so index the active data source.
+      flatItems = flattenObject(items || sets || {}, getCacheKey(index, false, grailType));
       ethFlatItems = flattenObject(ethItems || {}, getCacheKey(index, true, grailType));
 
       const shouldDisplayItem = (itemName: string): boolean => {

@@ -1011,9 +1011,8 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.6.3.tgz#f13c7c205915eb91ae54c557f5e92bddd8be0e83"
   integrity sha512-4B4OijXeVNOPZlYA2oEwWOTkzyltLao+xbotHQeqN++Rv27Y6s818+n2Qkp8q+Fxhn0t/5lA5X1Mxktud8eayQ==
 
-"@dschu012/d2s@https://github.com/viniciusrezende/d2s.git#feat/support-reign-of-warlock":
+"@dschu012/d2s@file:vendor/d2s":
   version "2.0.36"
-  resolved "https://github.com/viniciusrezende/d2s.git#96adaa230f673498772edd63906ddfc0f1c2e141"
 
 "@electron-forge/async-ora@6.0.0-beta.63":
   version "6.0.0-beta.63"

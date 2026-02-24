@@ -1,0 +1,17 @@
+import * as types from "./types";
+import { BitReader } from "../binary/bitreader";
+import { BitWriter } from "../binary/bitwriter";
+export declare function readCharItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig): Promise<void>;
+export declare function writeCharItems(char: types.ID2S, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function readMercItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig): Promise<void>;
+export declare function writeMercItems(char: types.ID2S, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function readGolemItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig): Promise<void>;
+export declare function writeGolemItems(char: types.ID2S, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function readCorpseItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig): Promise<void>;
+export declare function writeCorpseItem(char: types.ID2S, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function readItems(reader: BitReader, version: number, constants: types.IConstantData, config: types.IConfig, char?: types.ID2S): Promise<types.IItem[]>;
+export declare function writeItems(items: types.IItem[], version: number, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function readItem(reader: BitReader, version: number, originalConstants: types.IConstantData, config: types.IConfig, parent?: types.IItem): Promise<types.IItem>;
+export declare function writeItem(item: types.IItem, version: number, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array>;
+export declare function _readMagicProperties(reader: BitReader, constants: types.IConstantData): types.IMagicProperty[];
+export declare function _writeMagicProperties(writer: BitWriter, properties: types.IMagicProperty[], constants: types.IConstantData): void;

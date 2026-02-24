@@ -49,6 +49,9 @@ export function App() {
     if (typeof settings.grailType === 'undefined') {
       settings.grailType = defaultSettings.grailType;
     }
+    if (typeof settings.grailWarlock === 'undefined') {
+      settings.grailWarlock = defaultSettings.grailWarlock;
+    }
     if (typeof settings.grailRunes === 'undefined') {
       settings.grailRunes = defaultSettings.grailRunes;
     }

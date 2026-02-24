@@ -56,7 +56,7 @@ const flatItemsCache: FlatItemsCache = {
 
 export const buildFlattenObjectCacheKey = (cacheKey: keyof FlatItemsCache, settings: Settings): keyof FlatItemsCache => {
   const shouldHideNormalEthItems = settings.grailType === GrailType.Each || settings.grailType === GrailType.Normal;
-  return `${cacheKey}${settings.grailRunes ? 'R' : ''}${settings.grailRunewords ? 'W' : ''}${shouldHideNormalEthItems ? 'E' : ''}` as keyof FlatItemsCache;
+  return `${cacheKey}${settings.grailWarlock ? 'X' : ''}${settings.grailRunes ? 'R' : ''}${settings.grailRunewords ? 'W' : ''}${shouldHideNormalEthItems ? 'E' : ''}` as keyof FlatItemsCache;
 }
 
 // Flattens an object recursively, taking only the key names

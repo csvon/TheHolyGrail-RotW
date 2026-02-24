@@ -126,6 +126,7 @@ export type Settings = {
   magicFind: Number,
   playersNumber: Number,
   grailType: GrailType,
+  grailWarlock: boolean,
   grailRunes: boolean,
   grailRunewords: boolean,
   gameVersion: GameVersion,

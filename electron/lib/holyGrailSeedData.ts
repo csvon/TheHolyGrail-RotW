@@ -5,6 +5,8 @@ import { simplifyItemName } from '../../src/utils/objects';
 import { runesMapping } from './runesMapping';
 import { runewordsMapping } from './runewordsMapping';
 import { IEthGrailData } from 'd2-holy-grail/client/src/common/definitions/union/IEthGrailData';
+import { warlockEthGrailSeedData } from './warlockEthGrailSeedData';
+import { warlockGrailSeedData } from './warlockGrailSeedData';
 
 export let runesSeed: Record<string, string> = {};
 Object.keys(runesMapping).forEach((runeId: string) => {
@@ -16,13 +18,34 @@ Object.keys(runewordsMapping).forEach(runewordName => {
   runewordsSeed['runeword' + simplifyItemName(runewordName)] = runewordName;
 })
 
+const isPlainObject = (value: unknown): value is Record<string, any> => (
+  !!value && typeof value === 'object' && !Array.isArray(value)
+);
+
+const deepMergeObjects = <T extends Record<string, any>>(base: T, overlay: Record<string, any>): T => {
+  const merged: Record<string, any> = { ...base };
+  Object.keys(overlay || {}).forEach((key) => {
+    const baseValue = merged[key];
+    const overlayValue = overlay[key];
+    if (isPlainObject(baseValue) && isPlainObject(overlayValue)) {
+      merged[key] = deepMergeObjects(baseValue, overlayValue);
+      return;
+    }
+    merged[key] = overlayValue;
+  });
+  return merged as T;
+};
+
 export function getHolyGrailSeedData(settings: Settings | null, ethereal: false): HolyGrailSeed;
 export function getHolyGrailSeedData(settings: Settings | null, ethereal: true): IEthGrailData;
 export function getHolyGrailSeedData(settings: Settings | null, ethereal: boolean): HolyGrailSeed | IEthGrailData {
   if (ethereal === true) {
+    if (settings?.grailWarlock) {
+      return deepMergeObjects({ ...ethGrailSeedData } as IEthGrailData & Record<string, any>, warlockEthGrailSeedData);
+    }
     return ethGrailSeedData;
   }
-  const holyGrailSeedData: HolyGrailSeed = {
+  let holyGrailSeedData: HolyGrailSeed = {
     ...original,
     uniques: {
       ...original.uniques,
@@ -44,6 +67,9 @@ export function getHolyGrailSeedData(settings: Settings | null, ethereal: boolea
         },
       }
     },
+  }
+  if (settings?.grailWarlock) {
+    holyGrailSeedData = deepMergeObjects(holyGrailSeedData as HolyGrailSeed & Record<string, any>, warlockGrailSeedData);
   }
   if (settings && (settings.grailType === GrailType.Each || settings.grailType === GrailType.Normal)) {
     holyGrailSeedData.uniques.weapons.throwing.elite && delete(holyGrailSeedData.uniques.weapons.throwing.elite['Wraith Flight']);

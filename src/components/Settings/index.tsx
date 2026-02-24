@@ -113,6 +113,15 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
     window.Main.saveSetting(settingsKeys.grailRunes, runes);
   };
 
+  const handleGrailWarlock = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = event.target.checked;
+    clearPrevUniqItemsFound();
+    if (enabled && appSettings.webSyncEnabled) {
+      window.Main.saveSetting(settingsKeys.webSyncEnabled, false);
+    }
+    window.Main.saveSetting(settingsKeys.grailWarlock, enabled);
+  };
+
   const handleRunewords = (event: React.ChangeEvent<HTMLInputElement>) => {
     const runewords = event.target.checked;
     clearPrevUniqItemsFound();
@@ -214,6 +223,9 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
   };
 
   const handleWebSyncToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (appSettings.grailWarlock && event.target.checked) {
+      return;
+    }
     const enabled = event.target.checked;
     window.Main.saveSetting(settingsKeys.webSyncEnabled, enabled);
   };
@@ -506,6 +518,22 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                       </FormControl>
 
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-start' }}>
+                        <FormControlLabel
+                          control={<Checkbox 
+                            checked={!!appSettings.grailWarlock}
+                            onChange={handleGrailWarlock}
+                            disabled={isGrailConfigLocked}
+                            sx={{
+                              color: '#CC5F43',
+                              '&.Mui-checked': {
+                                color: '#CC5F43',
+                              },
+                            }}
+                          />}
+                          label={i18n.t`Include RotW Items`}
+                          sx={{ '& .MuiFormControlLabel-label': { width: '220px' } }}
+                        />
+
                         <FormControlLabel
                           control={<Checkbox 
                             checked={appSettings.grailRunes} 
@@ -1294,3 +1322,5 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
     </>
   );
 }
+
+

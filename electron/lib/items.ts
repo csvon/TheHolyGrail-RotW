@@ -20,6 +20,7 @@ import { webSyncManager } from './webSync';
 import { runesMapping } from './runesMapping';
 import { getSaveGamesFolder } from 'platform-folders';
 import { markManyEverFound } from './everFound';
+import { normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
 const { readFile } = promises;
 
 class ItemsStore {
@@ -429,7 +430,7 @@ class ItemsStore {
           results.stats[saveName] = 0;
           parsedItems.forEach((item) => {
             let originalName = item.unique_name || item.set_name || '';
-            let name = originalName.toLowerCase().replace(/[^a-z0-9]/gi, '');
+            let name = normalizeParsedUniqueOrSetLookupName(originalName, item.type);
             // Fix double apostrophes in display name
             let displayName = originalName.replace(/'{2,}/g, "'");
             

@@ -28,20 +28,6 @@ export function getHolyGrailSeedData(settings: Settings | null, ethereal: boolea
       ...original.uniques,
       other: {
         ...original.uniques.other,
-        jewelry: {
-          ...original.uniques.other.jewelry,
-          rings: {
-            Nagelring: {},
-            "Manald Heal": {},
-            "The Stone of Jordan": {},
-            "Dwarf Star": {},
-            "Raven Frost": {},
-            "Bul-Kathos' Wedding Band": {},
-            "Carrion Wind": {},
-            "Nature's Peace": {},
-            "Wisp Projector": {}
-          },
-        },
         "rainbow facet (jewel)": {
           "level up": {
             "Rainbow Facet: Cold Level-up": {},

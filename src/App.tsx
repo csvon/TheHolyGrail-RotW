@@ -71,6 +71,9 @@ export function App() {
     if (typeof settings.persistFoundOnDrop === 'undefined') {
       settings.persistFoundOnDrop = defaultSettings.persistFoundOnDrop;
     }
+    if (typeof settings.verboseSaveFilesSummary === 'undefined') {
+      settings.verboseSaveFilesSummary = defaultSettings.verboseSaveFilesSummary;
+    }
     if (typeof settings.showOverlay === 'undefined') {
       settings.showOverlay = defaultSettings.showOverlay;
     }

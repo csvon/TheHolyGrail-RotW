@@ -23,13 +23,16 @@ class SettingsStore {
     if (settings && typeof settings.persistFoundOnDrop === 'undefined' && typeof settings.enableSaves !== 'undefined') {
       settings.persistFoundOnDrop = !!settings.enableSaves;
     }
+    if (settings && typeof settings.verboseSaveFilesSummary === 'undefined' && typeof settings.verboseScanLogs !== 'undefined') {
+      settings.verboseSaveFilesSummary = !!settings.verboseScanLogs;
+    }
     const merged = {
       ...defaultSettings,
       ...settings
     };    // Optionally write back the migrated structure (removes obsolete key)
-    if (settings && typeof settings.enableSaves !== 'undefined') {
+    if (settings && (typeof settings.enableSaves !== 'undefined' || typeof settings.verboseScanLogs !== 'undefined')) {
       try {
-        const { enableSaves, ...rest } = merged as any;
+        const { enableSaves, verboseScanLogs, ...rest } = merged as any;
         storage.set('settings', rest, () => { });
       } catch { }
     }

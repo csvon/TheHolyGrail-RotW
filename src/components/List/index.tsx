@@ -248,6 +248,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, playSound }: 
         player={items}
         ethPlayer={ethItems}
         stats={stats}
+        unmappedItems={fileReaderResponse?.unmappedItems}
         search=""
         appSettings={appSettings}
         holyGrailStats={holyGrailStats}

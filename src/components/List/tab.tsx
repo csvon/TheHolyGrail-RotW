@@ -6,7 +6,7 @@ import merge from "ts-deepmerge";
 
 import { IUniqueArmors, IUniqueWeapons, IUniqueOther, ISetItems } from 'd2-holy-grail/client/src/common/definitions/union/IHolyGrailData';
 import { IEthUniqueArmors, IEthUniqueOther, IEthUniqueWeapons } from 'd2-holy-grail/client/src/common/definitions/union/IEthGrailData';
-import { AvailableRunes, GameMode, GameVersion, GrailType, HolyGrailStats, ItemNotes, ItemsInSaves, RuneType, SaveFileStats, Settings } from '../../@types/main.d';
+import { AvailableRunes, GameMode, GameVersion, GrailType, HolyGrailStats, ItemNotes, ItemsInSaves, RuneType, SaveFileStats, SaveFileUnmappedItems, Settings } from '../../@types/main.d';
 
 import runeBgImg from '../../../assets/rune.svg';
 
@@ -29,6 +29,7 @@ type TabPanelProps = {
   ethItems?: IEthUniqueArmors | IEthUniqueOther | IEthUniqueWeapons,
   sets?: ISetItems,
   stats?: SaveFileStats,
+  unmappedItems?: SaveFileUnmappedItems,
   runes?: { [runeId: string]: string },
   runewords?: { [runewordId: string]: string }
   player: ItemsInSaves,
@@ -80,7 +81,7 @@ const getCacheKey = (tabIndex: TabState, ethereal: boolean, grailType: GrailType
 }
 
 export function TabPanel(props: TabPanelProps) {
-  const { value, index, items, ethItems, sets, runes, runewords, player, ethPlayer, stats, search,
+  const { value, index, items, ethItems, sets, runes, runewords, player, ethPlayer, stats, unmappedItems, search,
     noFileSummary, noAnimation, appSettings, holyGrailStats, itemNotes = {}, availableRunes = {} } = props;
   const { gameMode, grailType } = appSettings;
   const { t } = useTranslation();
@@ -633,6 +634,7 @@ export function TabPanel(props: TabPanelProps) {
       {value === index && !sets && !items && stats && (
         <Statistics
           stats={!noFileSummary && gameMode !== GameMode.Manual ? stats : undefined}
+          unmappedItems={!noFileSummary && gameMode !== GameMode.Manual ? unmappedItems : undefined}
           noAnimation={noAnimation}
           appSettings={appSettings}
           holyGrailStats={holyGrailStats}

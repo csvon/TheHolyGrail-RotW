@@ -4,6 +4,21 @@ export type SaveFileStats = {
   [filename: string]: number | null,
 }
 
+export type UnmappedItemSummary = {
+  originalName: string,
+  normalizedName: string,
+  typeName?: string,
+  version?: number,
+  locationId?: number,
+  altPositionId?: number,
+  positionX?: number,
+  positionY?: number,
+}
+
+export type SaveFileUnmappedItems = {
+  [filename: string]: UnmappedItemSummary[],
+}
+
 export type Item = {
   name: string,
   type: string,
@@ -56,6 +71,7 @@ export type FileReaderResponse = {
   ethItems: ItemsInSaves,
   stats: SaveFileStats,
   availableRunes: AvailableRunes,
+  unmappedItems?: SaveFileUnmappedItems,
 }
 
 export type RuneType = "r01" | "r02" | "r03" | "r04" | "r05" | "r06" | "r07" | "r08" | "r09" | "r10" |
@@ -69,7 +85,8 @@ export type ParsedFileReaderResponse = {
   items: ItemsInSaves,
   ethItems: ItemsInSaves,
   stats: SaveFileStats,
-  availableRunes: AvailableRunes
+  availableRunes: AvailableRunes,
+  unmappedItems?: SaveFileUnmappedItems,
 }
 
 export type SilospenItem = {
@@ -115,6 +132,7 @@ export type Settings = {
   onlyMissing: boolean,
   enableSounds: boolean,
   persistFoundOnDrop: boolean;
+  verboseSaveFilesSummary: boolean,
   customSoundFile: string,
   soundVolume: number,
   showOverlay: boolean,

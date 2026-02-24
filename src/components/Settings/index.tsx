@@ -129,6 +129,11 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
     window.Main.saveSetting(settingsKeys.persistFoundOnDrop, enabled);
   };
 
+  const handleVerboseSaveFilesSummary = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = event.target.checked;
+    window.Main.saveSetting(settingsKeys.verboseSaveFilesSummary, enabled);
+  };
+
   const handleGameVersion = (event: SelectChangeEvent<GameVersion>) => {
     const version = event.target.value as GameVersion;
     window.Main.saveSetting(settingsKeys.gameVersion, version);
@@ -387,6 +392,34 @@ export default function SettingsPanel({ appSettings }: SettingsPanelProps) {
                     >
                       {t("Browse")}
                     </Button>
+                  </Box>
+                </ListItem>
+                <Divider />
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <InfoIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <ListItemText
+                      primary={t('Verbose save files summary')}
+                      secondary={t('Show per-save unmapped item counts and details in the Save files summary table')}
+                      sx={{ maxWidth: '60%' }}
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={!!appSettings.verboseSaveFilesSummary}
+                          onChange={handleVerboseSaveFilesSummary}
+                          sx={{
+                            color: '#CC5F43',
+                            '&.Mui-checked': {
+                              color: '#CC5F43',
+                            },
+                          }}
+                        />
+                      }
+                      label={t('Enabled')}
+                    />
                   </Box>
                 </ListItem>
                 <Divider />

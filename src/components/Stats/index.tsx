@@ -1,5 +1,6 @@
-import { Grid, Typography, Table, TableBody, TableCell, TableContainer, TableRow, TableHead } from '@mui/material';
-import { GrailType, HolyGrailStats, SaveFileStats, Settings } from '../../@types/main.d';
+import { Grid, Typography, Table, TableBody, TableCell, TableContainer, TableRow, TableHead, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import { GrailType, HolyGrailStats, SaveFileStats, SaveFileUnmappedItems, Settings, UnmappedItemSummary } from '../../@types/main.d';
+import { useState } from 'react';
 
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -82,16 +83,18 @@ type StatsProps = {
   appSettings: Settings,
   holyGrailStats: HolyGrailStats,
   stats?: SaveFileStats,
+  unmappedItems?: SaveFileUnmappedItems,
   noAnimation?: boolean,
   onlyCircle?: boolean,
 }
 
-export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, onlyCircle }: StatsProps) {
+export function Statistics({ stats, unmappedItems, noAnimation, appSettings, holyGrailStats, onlyCircle }: StatsProps) {
   const holyGrailSeedData = getHolyGrailSeedData(appSettings, false)
   const ethGrailSeedData = getHolyGrailSeedData(appSettings, true)
   const { t } = useTranslation();
   const recentFinds: RecentFind[] = ((window as any)?.Main?.getRecentFinds?.() || []) as RecentFind[];
   const visibleRecentFinds = recentFinds.slice(0, appSettings.overlayRecentFindsCount || 5);
+  const [selectedUnmappedSave, setSelectedUnmappedSave] = useState<string | null>(null);
 
   const showNormal = appSettings.grailType !== GrailType.Ethereal;
   const showEthereal = appSettings.grailType === GrailType.Ethereal || appSettings.grailType === GrailType.Each;
@@ -171,6 +174,12 @@ export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, on
       subTotal={subCounterTotal}
     />
   }
+
+  const selectedUnmappedItems: UnmappedItemSummary[] =
+    selectedUnmappedSave && unmappedItems && unmappedItems[selectedUnmappedSave]
+      ? unmappedItems[selectedUnmappedSave]
+      : [];
+  const showUnmappedSummaryColumn = !!appSettings.verboseSaveFilesSummary;
 
   return (
     <>
@@ -279,6 +288,7 @@ export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, on
                             <TableRow>
                               <TableCell>{t("Filename")}</TableCell>
                               <TableCell>{t("Items read")}</TableCell>
+                              {showUnmappedSummaryColumn && <TableCell>{t("Unmapped items")}</TableCell>}
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -290,6 +300,24 @@ export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, on
                                     ? <span style={{color: 'red'}}>{t("Error")}</span>
                                     : stats[filename]
                                 }</TableCell>
+                                {showUnmappedSummaryColumn && (
+                                  <TableCell>
+                                    {(() => {
+                                      const count = (unmappedItems && unmappedItems[filename] ? unmappedItems[filename].length : 0);
+                                      if (!count) return 0;
+                                      return (
+                                        <Button
+                                          size="small"
+                                          variant="text"
+                                          onClick={() => setSelectedUnmappedSave(filename)}
+                                          sx={{ minWidth: 0, p: 0, textTransform: 'none', color: '#CC5F43' }}
+                                        >
+                                          {count}
+                                        </Button>
+                                      );
+                                    })()}
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))}
                           </TableBody>
@@ -301,6 +329,55 @@ export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, on
                 </Box>
               </Grid>
             </Grid>
+            <Dialog
+              open={!!selectedUnmappedSave}
+              onClose={() => setSelectedUnmappedSave(null)}
+              maxWidth="lg"
+              fullWidth
+            >
+              <DialogTitle>
+                {selectedUnmappedSave
+                  ? t('Unmapped items for {{filename}}', { filename: selectedUnmappedSave })
+                  : t('Unmapped items')}
+              </DialogTitle>
+              <DialogContent>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>{t('Original name')}</TableCell>
+                        <TableCell>{t('Normalized name')}</TableCell>
+                        <TableCell>{t('Type name')}</TableCell>
+                        <TableCell>{t('Version')}</TableCell>
+                        <TableCell>{t('Location ID')}</TableCell>
+                        <TableCell>{t('Alt Position ID')}</TableCell>
+                        <TableCell>{t('Pos X')}</TableCell>
+                        <TableCell>{t('Pos Y')}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {selectedUnmappedItems.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8}>{t('No unmapped items')}</TableCell>
+                        </TableRow>
+                      )}
+                      {selectedUnmappedItems.map((item, idx) => (
+                        <TableRow key={`${item.normalizedName}-${item.typeName || ''}-${idx}`}>
+                          <TableCell>{item.originalName}</TableCell>
+                          <TableCell>{item.normalizedName}</TableCell>
+                          <TableCell>{item.typeName || ''}</TableCell>
+                          <TableCell>{typeof item.version === 'number' ? item.version : ''}</TableCell>
+                          <TableCell>{typeof item.locationId === 'number' ? item.locationId : ''}</TableCell>
+                          <TableCell>{typeof item.altPositionId === 'number' ? item.altPositionId : ''}</TableCell>
+                          <TableCell>{typeof item.positionX === 'number' ? item.positionX : ''}</TableCell>
+                          <TableCell>{typeof item.positionY === 'number' ? item.positionY : ''}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </DialogContent>
+            </Dialog>
           </>
         }
         {!noAnimation && total === owned && <Win/>}
@@ -308,3 +385,5 @@ export function Statistics({ stats, noAnimation, appSettings, holyGrailStats, on
     </>
   );
 }
+
+

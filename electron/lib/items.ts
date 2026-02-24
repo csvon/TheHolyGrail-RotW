@@ -8,7 +8,7 @@ import { existsSync, promises } from 'fs';
 import { basename, extname, join, resolve, sep } from 'path';
 import { IpcMainEvent } from 'electron/renderer';
 import { readdirSync } from 'original-fs';
-import { AvailableRunes, FileReaderResponse, GameMode, GrailType, Item, ItemDetails, ItemNotes, RuneType } from '../../src/@types/main.d';
+import { AvailableRunes, FileReaderResponse, GameMode, GrailType, Item, ItemDetails, ItemNotes, RuneType, UnmappedItemSummary } from '../../src/@types/main.d';
 import storage from 'electron-json-storage';
 import chokidar, { FSWatcher } from 'chokidar';
 import { getHolyGrailSeedData, runesSeed, runewordsSeed } from './holyGrailSeedData';
@@ -41,6 +41,7 @@ class ItemsStore {
       ethItems: {},
       stats: {},
       availableRunes: {},
+      unmappedItems: {},
     };
     this.fileWatcher = null;
     this.watchPath = null;
@@ -216,16 +217,19 @@ class ItemsStore {
   loadManualItems = () => {
     const data = (storage.getSync('manualItems') as FileReaderResponse);
     if (!data.items) {
-      storage.set('manualItems', { items: {}, ethItems: {}, stats: {} }, (err) => {
+      storage.set('manualItems', { items: {}, ethItems: {}, stats: {}, availableRunes: {}, unmappedItems: {} }, (err) => {
         if (err) {
           console.log(err);
         }
       });
-      this.currentData = { items: {}, ethItems: {}, stats: {}, availableRunes: {} }
+      this.currentData = { items: {}, ethItems: {}, stats: {}, availableRunes: {}, unmappedItems: {} }
     } else {
       // for compatibility with older manual items format
       if (!data.ethItems) {
         data.ethItems = {};
+      }
+      if (!data.unmappedItems) {
+        data.unmappedItems = {};
       }
       // filling in the "inSaves" information that is missing in older format
       Object.keys(this.currentData.items).forEach((key) => {
@@ -343,7 +347,8 @@ class ItemsStore {
       items: {},
       ethItems: {},
       stats: {},
-      availableRunes: {}
+      availableRunes: {},
+      unmappedItems: {},
     };
     const files = readdirSync(path).filter(file => ['.d2s', '.sss', '.d2x', '.d2i'].indexOf(extname(file).toLowerCase()) !== -1);
 
@@ -377,6 +382,41 @@ class ItemsStore {
     }
     // prepare item list
     const settings = settingsStore.getSettings();
+    const includeUnmappedSummary = !!settings.verboseSaveFilesSummary;
+    const unmappedItemWarnings = new Set<string>();
+    const collectUnmappedItem = (saveName: string, item: d2s.types.IItem, originalName: string, normalizedName: string, version?: number) => {
+      if (!includeUnmappedSummary) return;
+      const signature = [
+        saveName,
+        item.type_name || '',
+        originalName || '',
+        normalizedName || '',
+        version ?? '',
+        (item as any).location_id ?? '',
+        (item as any).alt_position_id ?? '',
+        (item as any).position_x ?? '',
+        (item as any).position_y ?? '',
+      ].join('|');
+      if (unmappedItemWarnings.has(signature)) return;
+      unmappedItemWarnings.add(signature);
+      const entry: UnmappedItemSummary = {
+        originalName,
+        normalizedName,
+        typeName: item.type_name,
+        version,
+        locationId: (item as any).location_id,
+        altPositionId: (item as any).alt_position_id,
+        positionX: (item as any).position_x,
+        positionY: (item as any).position_y,
+      };
+      if (!results.unmappedItems) {
+        results.unmappedItems = {};
+      }
+      if (!results.unmappedItems[saveName]) {
+        results.unmappedItems[saveName] = [];
+      }
+      results.unmappedItems[saveName].push(entry);
+    };
     const flatItems = flattenObject(getHolyGrailSeedData(settings, false), buildFlattenObjectCacheKey('all', settings));
     const ethFlatItems = flattenObject(getHolyGrailSeedData(settings, true), 'ethall');
     const erroringSaves: string[] = [];
@@ -385,9 +425,9 @@ class ItemsStore {
       const saveName = basename(file).replace(".d2s", "").replace(".sss", "").replace(".d2x", "").replace(".d2i", "");
       return readFile(join(path, file))
         .then((buffer) => this.parseSave(saveName, buffer, extname(file).toLowerCase()))
-        .then((result) => {
+        .then(({ items: parsedItems, version: saveVersion }) => {
           results.stats[saveName] = 0;
-          result.forEach((item) => {
+          parsedItems.forEach((item) => {
             let originalName = item.unique_name || item.set_name || '';
             let name = originalName.toLowerCase().replace(/[^a-z0-9]/gi, '');
             // Fix double apostrophes in display name
@@ -412,11 +452,17 @@ class ItemsStore {
             } else if (item.type === 'runeword') {
               name = item.runeword_name;
               displayName = item.runeword_name;
-            } else if (!flatItems[name] && (item.ethereal && !ethFlatItems[name])) {
-              return;
-            } else if (name === '') {
-              return;
-            };
+            } else {
+              if (name !== '' && !flatItems[name] && !ethFlatItems[name]) {
+                collectUnmappedItem(saveName, item, originalName, name, saveVersion);
+              }
+              if (!flatItems[name] && (item.ethereal && !ethFlatItems[name])) {
+                return;
+              }
+              if (name === '') {
+                return;
+              }
+            }
             const savedItem: ItemDetails = {
               ethereal: !!item.ethereal,
               ilevel: item.level,
@@ -536,8 +582,9 @@ class ItemsStore {
     });
   }
 
-  parseSave = async (saveName: string, content: Buffer, extension: string): Promise<d2s.types.IItem[]> => {
+  parseSave = async (saveName: string, content: Buffer, extension: string): Promise<{ items: d2s.types.IItem[]; version?: number }> => {
     const items: d2s.types.IItem[] = [];
+    let parsedVersion: number | undefined;
     const readUInt32LE = (buffer: Buffer, offset: number): number => {
       if (offset + 4 > buffer.length) {
         return 0;
@@ -620,6 +667,7 @@ class ItemsStore {
     }
 
     const parseD2S = (response: d2s.types.ID2S) => {
+      parsedVersion = response?.header?.version;
       const settings = settingsStore.getSettings()
       if (settings.gameMode === GameMode.Softcore && response.header.status.hardcore) {
         return [];
@@ -639,6 +687,7 @@ class ItemsStore {
     };
 
     const parseStash = (response: d2s.types.IStash) => {
+      parsedVersion = (response as any)?.version ?? (response as any)?.header?.version;
       const settings = settingsStore.getSettings()
       if (settings.gameMode === GameMode.Softcore && saveName.toLowerCase().includes('hardcore')) {
         return [];
@@ -667,7 +716,7 @@ class ItemsStore {
       default:
         await d2s.read(content).then(parseD2S);
     }
-    return items;
+    return { items, version: parsedVersion };
   };
 
   readFilesUponStart = async (event: IpcMainEvent) => {

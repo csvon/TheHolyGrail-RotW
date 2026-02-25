@@ -349,16 +349,13 @@ export function Statistics({ stats, unmappedItems, noAnimation, appSettings, hol
                         <TableCell>{t('Normalized name')}</TableCell>
                         <TableCell>{t('Type name')}</TableCell>
                         <TableCell>{t('Version')}</TableCell>
-                        <TableCell>{t('Location ID')}</TableCell>
-                        <TableCell>{t('Alt Position ID')}</TableCell>
-                        <TableCell>{t('Pos X')}</TableCell>
-                        <TableCell>{t('Pos Y')}</TableCell>
+                        <TableCell>{t('Lookup ID')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {selectedUnmappedItems.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={8}>{t('No unmapped items')}</TableCell>
+                          <TableCell colSpan={5}>{t('No unmapped items')}</TableCell>
                         </TableRow>
                       )}
                       {selectedUnmappedItems.map((item, idx) => (
@@ -367,10 +364,7 @@ export function Statistics({ stats, unmappedItems, noAnimation, appSettings, hol
                           <TableCell>{item.normalizedName}</TableCell>
                           <TableCell>{item.typeName || ''}</TableCell>
                           <TableCell>{typeof item.version === 'number' ? item.version : ''}</TableCell>
-                          <TableCell>{typeof item.locationId === 'number' ? item.locationId : ''}</TableCell>
-                          <TableCell>{typeof item.altPositionId === 'number' ? item.altPositionId : ''}</TableCell>
-                          <TableCell>{typeof item.positionX === 'number' ? item.positionX : ''}</TableCell>
-                          <TableCell>{typeof item.positionY === 'number' ? item.positionY : ''}</TableCell>
+                          <TableCell>{typeof item.lookupId === 'number' ? item.lookupId : ''}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

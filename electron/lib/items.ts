@@ -405,10 +405,7 @@ class ItemsStore {
         normalizedName,
         typeName: item.type_name,
         version,
-        locationId: (item as any).location_id,
-        altPositionId: (item as any).alt_position_id,
-        positionX: (item as any).position_x,
-        positionY: (item as any).position_y,
+        lookupId: (item as any).set_id ?? (item as any).unique_id,
       };
       if (!results.unmappedItems) {
         results.unmappedItems = {};

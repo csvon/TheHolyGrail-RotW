@@ -9,10 +9,7 @@ export type UnmappedItemSummary = {
   normalizedName: string,
   typeName?: string,
   version?: number,
-  locationId?: number,
-  altPositionId?: number,
-  positionX?: number,
-  positionY?: number,
+  lookupId?: number,
 }
 
 export type SaveFileUnmappedItems = {

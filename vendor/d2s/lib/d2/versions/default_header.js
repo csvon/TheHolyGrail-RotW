@@ -46,9 +46,11 @@ function readHeader(char, reader, constants) {
     char.header.merc_type = reader.ReadUInt16(); //0x00b9
     char.header.merc_experience = reader.ReadUInt32(); //0x00bb
     if (char.header.version == 0x69) {
+        // D2R v105 extends this unknown header block.
         reader.SkipBytes(228);
     }
-    else if (char.header.version > 0x61) {
+    else {
+        // Legacy and LoD-era saves still have the original 144-byte block.
         reader.SkipBytes(144);
     }
     reader.SkipBytes(4); //0x014f [quests header identifier = 0x57, 0x6f, 0x6f, 0x21 "Woo!"]

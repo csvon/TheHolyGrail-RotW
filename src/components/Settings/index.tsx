@@ -839,7 +839,7 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
       </AccordionDetails>
     </Accordion>
 
-    {/* Overlay Settings */}
+    {/* Recent Finds Settings */}
     <Accordion 
       expanded={expandedSections.overlaySettings}
       onChange={handleAccordionChange('overlaySettings')}
@@ -847,205 +847,237 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <PictureInPictureIcon />
-          {t("Overlay Settings")}
+          {t("Recent Finds Settings")}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <List>
-          {/* Overlay Settings */}
           <ListItem>
             <ListItemIcon sx={{ minWidth: 56 }}>
               <PictureInPictureIcon />
             </ListItemIcon>
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <ListItemText
-                primary={t('Overlay Window')}
-                secondary={t('Show a moveable overlay window with real-time stats')}
-                sx={{ maxWidth: '40%' }}
+                primary={t('Show Recent Finds')}
+                secondary={t('Applies to both in-app recent finds and overlay recent finds')}
+                sx={{ maxWidth: '60%' }}
               />
-              
-              <Box sx={{ maxWidth: '55%', minWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={!!appSettings.showOverlay}
-                      onChange={handleOverlayToggle}
-                      sx={{
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={!!appSettings.overlayShowRecentFinds}
+                    onChange={handleOverlayRecentFindsToggle}
+                    sx={{
+                      color: '#CC5F43',
+                      '&.Mui-checked': {
                         color: '#CC5F43',
-                        '&.Mui-checked': {
-                          color: '#CC5F43',
-                        },
-                      }}
-                    />
-                  }
-                  label={t('Show overlay')}
-                  sx={{ mb: 2, alignSelf: 'flex-end' }}
+                      },
+                    }}
+                  />
+                }
+                label={t('Enabled')}
+              />
+            </Box>
+          </ListItem>
+          <Divider />
+
+          <ListItem>
+            <ListItemIcon sx={{ minWidth: 56 }}>
+              <PictureInPictureIcon />
+            </ListItemIcon>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <ListItemText
+                primary={t('Number of Recent Finds')}
+                secondary={t('Applies to both in-app recent finds and overlay recent finds')}
+                sx={{ maxWidth: '55%' }}
+              />
+              <Box sx={{ width: '40%', minWidth: 260 }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 1 }}>
+                  {appSettings.overlayRecentFindsCount || 5}
+                </Typography>
+                <Slider
+                  value={appSettings.overlayRecentFindsCount || 5}
+                  onChange={handleOverlayRecentFindsCountChange}
+                  min={1}
+                  max={10}
+                  step={1}
+                  disabled={!appSettings.overlayShowRecentFinds}
+                  marks={[
+                    { value: 1, label: '1' },
+                    { value: 3, label: '3' },
+                    { value: 5, label: '5' },
+                    { value: 8, label: '8' },
+                    { value: 10, label: '10' },
+                  ]}
+                  sx={{
+                    color: '#CC5F43',
+                    '& .MuiSlider-thumb': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-track': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-rail': {
+                      backgroundColor: '#444',
+                    }
+                  }}
                 />
+              </Box>
+            </Box>
+          </ListItem>
+          <Divider />
 
-                {appSettings.showOverlay && (
-                  <Box sx={{ 
-                    p: 3, 
-                    border: '1px solid #444', 
-                    borderRadius: 2, 
-                    bgcolor: 'rgba(255,255,255,0.02)',
-                    alignSelf: 'flex-start',
-                    width: '100%',
-                    maxWidth: 400
-                  }}>
-                    
-                    {/* Scale Control */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '1rem', mb: 2 }}>
-                        {t('Overlay Size')}: {currentOverlayScale}%
-                      </Typography>
-                      <Box sx={{ width: '100%' }}>
-                        <Slider
-                          value={currentOverlayScale}
-                          onChange={handleOverlayScaleChange}
-                          min={50}
-                          max={150}
-                          step={5}
-                          marks={[
-                            { value: 50, label: '50%' },
-                            { value: 75, label: '75%' },
-                            { value: 100, label: '100%' },
-                            { value: 125, label: '125%' },
-                            { value: 150, label: '150%' }
-                          ]}
-                          valueLabelDisplay="auto"
-                          valueLabelFormat={(value) => `${value}%`}
-                          size="medium"
-                          sx={{
-                            height: 8,
-                            color: '#CC5F43',
-                            '& .MuiSlider-thumb': {
-                              backgroundColor: '#CC5F43',
-                            },
-                            '& .MuiSlider-track': {
-                              backgroundColor: '#CC5F43',
-                            },
-                            '& .MuiSlider-rail': {
-                              backgroundColor: '#444',
-                            }
-                          }}
-                        />
-                      </Box>
-                    </Box>
+          <ListItem>
+            <ListItemIcon sx={{ minWidth: 56 }}>
+              <ClearAllIcon />
+            </ListItemIcon>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItemText
+                primary={t('Clear Recent Finds')}
+                secondary={t('Clear saved recent finds history')}
+                sx={{ maxWidth: '60%' }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<ClearAllIcon />}
+                onClick={handleClearRecentFinds}
+                size="small"
+                sx={{
+                  backgroundColor: 'white',
+                  color: 'black',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5',
+                  }
+                }}
+              >
+                {t('Clear Recent Finds')}
+              </Button>
+            </Box>
+          </ListItem>
+          <Divider />
 
-                    {/* Recent Finds Controls */}
-                    <Box sx={{ mt: 3, mb: 2 }}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={!!appSettings.overlayShowRecentFinds}
-                            onChange={handleOverlayRecentFindsToggle}
-                            sx={{
-                              color: '#CC5F43',
-                              '&.Mui-checked': {
-                                color: '#CC5F43',
-                              },
-                            }}
-                          />
-                        }
-                        label={t('Show Recent Finds')}
-                        sx={{ mb: 2, alignSelf: 'flex-start' }}
-                      />
+          <ListItem>
+            <ListItemIcon sx={{ minWidth: 56 }}>
+              <PictureInPictureIcon />
+            </ListItemIcon>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <ListItemText
+                primary={t('Show overlay')}
+                secondary={t('Show a moveable overlay window with real-time stats')}
+                sx={{ maxWidth: '60%' }}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={!!appSettings.showOverlay}
+                    onChange={handleOverlayToggle}
+                    sx={{
+                      color: '#CC5F43',
+                      '&.Mui-checked': {
+                        color: '#CC5F43',
+                      },
+                    }}
+                  />
+                }
+                label={t('Enabled')}
+              />
+            </Box>
+          </ListItem>
+          <Divider />
 
-                      {appSettings.overlayShowRecentFinds && (
-                        <Box sx={{ mt: 2 }}>
-                          <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 2 }}>
-                            {t('Number of Recent Finds')}: {appSettings.overlayRecentFindsCount || 5}
-                          </Typography>
-                          <Box sx={{ width: '100%' }}>
-                            <Slider
-                              value={appSettings.overlayRecentFindsCount || 5}
-                              onChange={handleOverlayRecentFindsCountChange}
-                              min={1}
-                              max={10}
-                              step={1}
-                              marks={[
-                                { value: 1, label: '1' },
-                                { value: 3, label: '3' },
-                                { value: 5, label: '5' },
-                                { value: 8, label: '8' },
-                                { value: 10, label: '10' },
-                              ]}
-                              sx={{
-                                color: '#CC5F43',
-                                '& .MuiSlider-thumb': {
-                                  backgroundColor: '#CC5F43',
-                                },
-                                '& .MuiSlider-track': {
-                                  backgroundColor: '#CC5F43',
-                                },
-                                '& .MuiSlider-rail': {
-                                  backgroundColor: '#444',
-                                }
-                              }}
-                            />
-                          </Box>
+          <ListItem>
+            <ListItemIcon sx={{ minWidth: 56 }}>
+              <PictureInPictureIcon />
+            </ListItemIcon>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <ListItemText
+                primary={t('Overlay Size')}
+                secondary={t('Overlay-only setting')}
+                sx={{ maxWidth: '55%' }}
+              />
+              <Box sx={{ width: '40%', minWidth: 260 }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 1 }}>
+                  {currentOverlayScale}%
+                </Typography>
+                <Slider
+                  value={currentOverlayScale}
+                  onChange={handleOverlayScaleChange}
+                  min={50}
+                  max={150}
+                  step={5}
+                  disabled={!appSettings.showOverlay}
+                  marks={[
+                    { value: 50, label: '50%' },
+                    { value: 75, label: '75%' },
+                    { value: 100, label: '100%' },
+                    { value: 125, label: '125%' },
+                    { value: 150, label: '150%' }
+                  ]}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value) => `${value}%`}
+                  size="medium"
+                  sx={{
+                    height: 8,
+                    color: '#CC5F43',
+                    '& .MuiSlider-thumb': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-track': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-rail': {
+                      backgroundColor: '#444',
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+          </ListItem>
+          <Divider />
 
-                          <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 2, mt: 3 }}>
-                            {t('Font Size')}: {appSettings.overlayRecentFindsFontSize || 14}px
-                          </Typography>
-                          <Box sx={{ width: '100%' }}>
-                            <Slider
-                              value={appSettings.overlayRecentFindsFontSize || 14}
-                              onChange={handleOverlayRecentFindsFontSizeChange}
-                              min={10}
-                              max={24}
-                              step={1}
-                              marks={[
-                                { value: 10, label: '10' },
-                                { value: 12, label: '12' },
-                                { value: 14, label: '14' },
-                                { value: 16, label: '16' },
-                                { value: 18, label: '18' },
-                                { value: 20, label: '20' },
-                                { value: 24, label: '24' },
-                              ]}
-                              sx={{
-                                color: '#CC5F43',
-                                '& .MuiSlider-thumb': {
-                                  backgroundColor: '#CC5F43',
-                                },
-                                '& .MuiSlider-track': {
-                                  backgroundColor: '#CC5F43',
-                                },
-                                '& .MuiSlider-rail': {
-                                  backgroundColor: '#444',
-                                }
-                              }}
-                            />
-                          </Box>
-                          
-                          {/* Clear Recent Finds Button */}
-                          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-                            <Button
-                              variant="contained"
-                              startIcon={<ClearAllIcon />}
-                              onClick={handleClearRecentFinds}
-                              size="small"
-                              sx={{
-                                backgroundColor: 'white',
-                                color: 'black',
-                                '&:hover': {
-                                  backgroundColor: '#f5f5f5',
-                                }
-                              }}
-                            >
-                              {t('Clear Recent Finds')}
-                            </Button>
-                          </Box>
-                        </Box>
-                      )}
-                    </Box>
-
-                    <Typography variant="caption" display="block" color="textSecondary" sx={{ fontSize: '0.85rem' }}>
-                      {t('Configure overlay appearance and recent finds display. Changes apply immediately.')}
-                    </Typography>
-                  </Box>
-                )}
+          <ListItem>
+            <ListItemIcon sx={{ minWidth: 56 }}>
+              <PictureInPictureIcon />
+            </ListItemIcon>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <ListItemText
+                primary={t('Font Size')}
+                secondary={t('Overlay-only setting')}
+                sx={{ maxWidth: '55%' }}
+              />
+              <Box sx={{ width: '40%', minWidth: 260 }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.9rem', mb: 1 }}>
+                  {appSettings.overlayRecentFindsFontSize || 14}px
+                </Typography>
+                <Slider
+                  value={appSettings.overlayRecentFindsFontSize || 14}
+                  onChange={handleOverlayRecentFindsFontSizeChange}
+                  min={10}
+                  max={24}
+                  step={1}
+                  disabled={!appSettings.showOverlay || !appSettings.overlayShowRecentFinds}
+                  marks={[
+                    { value: 10, label: '10' },
+                    { value: 12, label: '12' },
+                    { value: 14, label: '14' },
+                    { value: 16, label: '16' },
+                    { value: 18, label: '18' },
+                    { value: 20, label: '20' },
+                    { value: 24, label: '24' },
+                  ]}
+                  sx={{
+                    color: '#CC5F43',
+                    '& .MuiSlider-thumb': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-track': {
+                      backgroundColor: '#CC5F43',
+                    },
+                    '& .MuiSlider-rail': {
+                      backgroundColor: '#444',
+                    }
+                  }}
+                />
               </Box>
             </Box>
           </ListItem>

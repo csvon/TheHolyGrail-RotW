@@ -1,6 +1,6 @@
 # The Holy Grail (Diablo II: Resurrected - Reign of the Warlock)
 
-Fork of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail) with additional support and quality-of-life improvements for **Reign of the Warlock (RotW)**.
+Fork of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail) with additional support for **Reign of the Warlock (RotW)** and quality-of-life improvements.
 
 This desktop app scans your Diablo II: Resurrected offline save files and tracks your **Holy Grail** progress.
 Built with **Electron**, **React**, and **TypeScript**.
@@ -17,7 +17,7 @@ Also check out [TheHolyGrail Public Tracker](https://github.com/pyrosplat/TheHol
 - Adds support for the new **Warlock** character.
 - Adds basic **shared stash** parsing for RotW:
   - Reads all 5 shared stash pages.
-  - Reads rune presence from the runes tab (limited support).
+  - Reads rune presence from the runes tab (presence, but not quantity).
 
 ### New Features
 - Recent finds accordion on the app home screen.
@@ -27,8 +27,7 @@ Also check out [TheHolyGrail Public Tracker](https://github.com/pyrosplat/TheHol
 
 ### Current Limitations
 - Materials tab is not parsed.
-- Rune quantities are not decoded (presence only).
-- Newly added RotW items are not supported yet.
+- Rune quantities are not decoded in shared stash (presence only).
 
 ## Core Features of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail)
 

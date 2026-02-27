@@ -923,32 +923,6 @@ export const runewordsMapping: RunewordsMapping = {
         "patch": 1.1,
         "wiki": "https://d2runewizard.com/runewords/Chaos"
     },
-    "Coven": {
-        "level": 51,
-        "name": "Coven",
-        "runes": [
-            "ist",
-            "ral",
-            "io"
-        ],
-        "bases": [
-            "helm"
-        ],
-        "attributes": [
-            "5% Chance to cast level 10 Sigil: Lethargy when struck",
-            "+1 to All Skills",
-            "+20% Faster Cast Rate",
-            "30-50% Enhanced Defense",
-            "+10 to Vitality",
-            "Fire Resist +30%",
-            "1-5 Life after each Kill",
-            "26-40% Better Chance of Getting Magic Items"
-        ],
-        "ladder": true,
-        "tier": 3,
-        "patch": 1.1,
-        "wiki": "https://d2runewizard.com/runewords/Coven"
-    },
     "Crescent Moon": {
         "level": 47,
         "name": "Crescent Moon",
@@ -2723,6 +2697,191 @@ export const runewordsMapping: RunewordsMapping = {
       "tier": 3,
       "patch": 2.6,
       "wiki": "https://d2runewizard.com/runewords/Metamorphosis"
+    },
+    
+    // PATCH 3.0 (RotW)
+    "Coven": {
+        "level": 51,
+        "name": "Coven",
+        "runes": [
+            "ist",
+            "ral",
+            "io"
+        ],
+        "bases": [
+            "helm"
+        ],
+        "attributes": [
+            "+1 to All Skills",
+            "+20% Faster Cast Rate",
+            "5% Chance to cast level 10 Sigil Lethargy when Struck",
+            "30-50% Enhanced Defense",
+            "1-5 Life after each Kill",
+            "26-40% Better Chance of Getting Magic Items",
+            "Fire Resist +30%",
+            "+10 To Vitality"
+        ],
+        "ladder": false,
+        "tier": 3,
+        "patch": 3.0,
+        "wiki": "https://d2runewizard.com/runewords/Coven"
+    },
+    "Authority": {
+      "level": 29,
+      "name": "Authority",
+      "runes": [
+          "hel",
+          "shael",
+          "ral"
+      ],
+      "bases": [
+        "body armor"
+      ],
+      "attributes": [
+          "2% Chance to cast level 10 Psychic Ward when struck",
+          "10% Chance to cast level 15 Miasma Chain on striking",
+          "+2 to Warlock Skill Levels",
+          "+40-60% Enhanced Damage",
+          "Requirements -15%",
+          "+20% Faster Hit Recovery",
+          "Fire Resist +30%"
+      ],
+      "ladder": false,
+      "tier": 2,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/authority-t1673934.html"
+    },
+    "Hysteria": {
+      "level": 39,
+      "name": "Hysteria",
+      "runes": [
+          "shael",
+          "ko",
+          "eld"
+      ],
+      "bases": [
+        "body armor"
+      ],
+      "attributes": [
+          "+65% Faster Run/Walk",
+          "+40% Increased Attack Speed",
+          "+20% Faster Hit Recovery",
+          "+6 to Evade",
+          "+10 to Dexterity",
+          "50% Slower Stamina Drain",
+          "+All Resistances +10"
+      ],
+      "ladder": true,
+      "tier": 2,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/hysteria-t1674021.html"
+    },
+    "Mania": {
+      "level": 39,
+      "name": "Mania",
+      "runes": [
+          "shael",
+          "ko",
+          "eld"
+      ],
+      "bases": [
+        "weapon"
+      ],
+      "attributes": [
+          "5% Chance to cast level 1 Burst of Speed on striking",
+          "Level 1 Fanaticism Aura When Equipped",
+          "+30% Increased Attack Speed",
+          "+180-200% Enhanced Damage",
+          "+75% Damage to Undead",
+          "+50 to Attack Rating against Undead",
+          "+10 to Dexterity"
+      ],
+      "ladder": true,
+      "tier": 2,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/mania-t1674022.html"
+    },
+    "Ritual": {
+      "level": 57,
+      "name": "Ritual",
+      "runes": [
+          "amn",
+          "shael",
+          "ohm"
+      ],
+      "bases": [
+        "dagger"
+      ],
+      "attributes": [
+          "13% Chance to cast level 1 Sigil Death when struck",
+          "+40% Increased Attack Speed",
+          "+250-320% Enhanced Damage",
+          "+150-250% Damage to Demons",
+          "+200-260% Bonus to Attack Rating",
+          "+3-5 Life after each Kill",
+          "Slain Monsters Rest in Peace",
+          "7% Life stolen per hit"
+      ],
+      "ladder": false,
+      "tier": 2,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/ritual-t1673938.html"
+    },
+    "Vigilance": {
+      "level": 53,
+      "name": "Vigilance",
+      "runes": [
+          "dol",
+          "gul"
+      ],
+      "bases": [
+        "grimoire",
+        "shield",
+        "shrunken head",
+        "paladin shield"
+      ],
+      "attributes": [
+          "5% Chance to cast level 10 Ring of Fire when struck",
+          "+10% Faster Run/Walk",
+          "+30% Faster Block Rate",
+          "+20-40 to Life",
+          "+20-40 to Mana",
+          "All Resistances +25-35",
+          "+75-100% Enhanced Defense",
+          "Replenish Life +7",
+          "+5% to Maximum Poison Resist"
+      ],
+      "ladder": false,
+      "tier": 2,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/vigilance-t1673937.html"
+    },
+    "Void": {
+      "level": 69,
+      "name": "Void",
+      "runes": [
+          "thul",
+          "zod",
+          "ist"
+      ],
+      "bases": [
+        "dagger"
+      ],
+      "attributes": [
+          "+2 to All Skills",
+          "+40% Faster Cast Rate",
+          "+10-15% to Magic Skill Damage",
+          "+1 to Abyss (Level 3)",
+          "+8-12 to all Attributes",
+          "Level 4 Decrepify (35/35 Charges)",
+          "Adds 3-14 Cold Damage",
+          "Indestructible",
+          "30% Better Chance of Getting Magic Items"
+      ],
+      "ladder": false,
+      "tier": 3,
+      "patch": 3.0,
+      "wiki": "https://diablo2.io/runewords/void-t1673936.html"
     }
 };
 
@@ -2761,6 +2920,7 @@ export const quickRunewordMap: {[runes: string]: string} = {
     "amn,ral,mal,ist,ohm":"Call to Arms",
     "fal,ohm,um":"Chaos",
     "ist,ral,io":"Coven",
+    "hel,shael,ral":"Authority",
     "shael,um,tir":"Crescent Moon",
     "hel,el,vex,ort,gul":"Death",
     "vex,lo,ber,jah,ko":"Destruction",
@@ -2818,6 +2978,11 @@ export const quickRunewordMap: {[runes: string]: string} = {
     "shael,io,ort":"Ground",
     "shael,io,thul":"Hearth",
     "shael,io,ral":"Temper",
+    "amn,shael,ohm":"Ritual",
+    "dol,gul":"Vigilance",
+    "thul,zod,ist":"Void",
+    // "shael,ko,eld" is ambiguous in RotW (Hustle / Hysteria / Mania).
+    // Keep Hustle as the fallback quick-map value; parser-provided runeword_name is authoritative.
     "shael,ko,eld":"Hustle",
     "mal,gul,amn":"Mosaic",
     "io,cham,fal":"Metamorphosis"

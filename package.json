@@ -1,7 +1,7 @@
 {
   "name": "theholygrail-rotw",
   "author": "csvon",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Track Diablo II: Resurrected Holy Grail progress with Reign of the Warlock support.",
   "main": "./.webpack/main",
   "private": true,

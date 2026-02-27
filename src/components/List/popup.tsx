@@ -1,4 +1,4 @@
-import { useState, ReactChild } from 'react';
+import { useState, useMemo, ReactChild } from 'react';
 import { styled } from '@mui/material/styles';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -39,6 +39,11 @@ type PopupProps = {
   ethSaveFiles: {[saveName: string]: ItemDetails[]},
   appSettings: Settings,
   itemNote: string,
+}
+
+type InspectableItem = {
+  characterName: string,
+  item: ItemDetails,
 }
 
 const BLUE_AFFIX_COLOR = '#4e6edf';
@@ -102,10 +107,21 @@ export default function Popup({
   const [note, setNote] = useState('');
   const [drop, setDrop] = useState<ReactChild | null>(null);
   const [itemDetailsOpen, setItemDetailsOpen] = useState(false);
-  const [selectedSaveItems, setSelectedSaveItems] = useState<ItemDetails[]>([]);
-  const [selectedSaveIndex, setSelectedSaveIndex] = useState(0);
+  const [selectedItems, setSelectedItems] = useState<InspectableItem[]>([]);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(0);
 
   const diablo2ioUrl = diablo2ioMapping[itemName] || 'https://diablo2.io/';
+  const allInspectableItems = useMemo(
+    () => [
+      ...Object.entries(saveFiles || {}).flatMap(([characterName, details]) =>
+        details.map((item) => ({ characterName, item }))
+      ),
+      ...Object.entries(ethSaveFiles || {}).flatMap(([characterName, details]) =>
+        details.map((item) => ({ characterName, item }))
+      ),
+    ],
+    [saveFiles, ethSaveFiles]
+  );
 
   const handleClickOpen = () => {
     window.Main.on('silospenResponse', (drops: SilospenItem[]) => {
@@ -150,14 +166,20 @@ export default function Popup({
     setNoteOpen(false);
   }
 
-  const openItemDetails = (details: ItemDetails[]) => {
-    if (!details || !details.length) return;
-    setSelectedSaveItems(details);
-    setSelectedSaveIndex(0);
+  const openItemDetails = (characterName: string, details: ItemDetails[]) => {
+    if (!details || !details.length || !allInspectableItems.length) return;
+    const firstCharacterItem = details[0];
+    const firstCharacterItemIndex = allInspectableItems.findIndex((entry) =>
+      entry.characterName === characterName && entry.item === firstCharacterItem
+    );
+    setSelectedItems(allInspectableItems);
+    setSelectedItemIndex(firstCharacterItemIndex >= 0 ? firstCharacterItemIndex : 0);
     setItemDetailsOpen(true);
   }
 
-  const selectedItem = selectedSaveItems[selectedSaveIndex];
+  const selectedEntry = selectedItems[selectedItemIndex];
+  const selectedItem = selectedEntry?.item;
+  const selectedCharacterName = selectedEntry?.characterName;
   const itemNameForDetails = selectedItem ? getDisplayItemName(fullItemName, selectedItem) : fullItemName;
   const colors = selectedItem ? getItemPalette(selectedItem) : { name: '#d7d7d7', base: '#d7d7d7' };
   const extraLines = selectedItem
@@ -204,8 +226,8 @@ export default function Popup({
                     ? <>{saveFile}<sub>&nbsp;x{saveFiles[saveFile].length}</sub></>
                     : saveFile
                 }
-                onClick={() => openItemDetails(saveFiles[saveFile])}
-                style={{ marginRight: 5 }}
+                onClick={() => openItemDetails(saveFile, saveFiles[saveFile])}
+                style={{ marginRight: 5, marginBottom: 4 }}
               />)}
             </small>
           : null}
@@ -219,8 +241,8 @@ export default function Popup({
                   ? <>{saveFile}<sub>&nbsp;x{ethSaveFiles[saveFile].length}</sub></>
                     : saveFile
                 }
-                onClick={() => openItemDetails(ethSaveFiles[saveFile])}
-                style={{ marginRight: 5 }}
+                onClick={() => openItemDetails(saveFile, ethSaveFiles[saveFile])}
+                style={{ marginRight: 5, marginBottom: 4 }}
               />)}
             </small>
           : null}
@@ -386,24 +408,27 @@ export default function Popup({
             </div>
           )}
         </DialogContent>
-        {selectedSaveItems.length > 1 && (
+        {selectedItems.length > 0 && (
           <DialogActions sx={{ justifyContent: 'space-between' }}>
             <Typography variant="caption" sx={{ opacity: 0.8, pl: 1 }}>
-              {selectedSaveIndex + 1}/{selectedSaveItems.length}
+              {selectedCharacterName ? `Character: ${selectedCharacterName}` : ''}
             </Typography>
-            <div>
-            <IconButton
-              onClick={() => setSelectedSaveIndex((index) => Math.max(0, index - 1))}
-              disabled={selectedSaveIndex <= 0}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            <IconButton
-              onClick={() => setSelectedSaveIndex((index) => Math.min(selectedSaveItems.length - 1, index + 1))}
-              disabled={selectedSaveIndex >= selectedSaveItems.length - 1}
-            >
-              <ChevronRightIcon />
-            </IconButton>
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <Typography variant="caption" sx={{ opacity: 0.8, mr: 1 }}>
+                {selectedItemIndex + 1}/{selectedItems.length}
+              </Typography>
+              <IconButton
+                onClick={() => setSelectedItemIndex((index) => Math.max(0, index - 1))}
+                disabled={selectedItemIndex <= 0}
+              >
+                <ChevronLeftIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => setSelectedItemIndex((index) => Math.min(selectedItems.length - 1, index + 1))}
+                disabled={selectedItemIndex >= selectedItems.length - 1}
+              >
+                <ChevronRightIcon />
+              </IconButton>
             </div>
           </DialogActions>
         )}

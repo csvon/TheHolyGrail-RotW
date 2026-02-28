@@ -7,6 +7,7 @@ import { Button } from "@mui/material";
 import { Progress } from "electron-dl";
 
 const GITHUB_LATEST_RELEASE = 'https://api.github.com/repos/csvon/TheHolyGrail-RotW/releases/latest';
+const GITHUB_RELEASES_LATEST_PAGE = 'https://github.com/csvon/TheHolyGrail-RotW/releases/latest';
 const MANUAL_UPDATE_CHECK_EVENT = 'thg:check-updates';
 const UPDATE_TOAST_CLASS = 'thg-update-toast';
 const UPDATE_TOAST_STYLE: CSSProperties = {
@@ -17,6 +18,7 @@ const UPDATE_TOAST_STYLE: CSSProperties = {
 
 type GitHubRelease = {
     name: string,
+    html_url?: string,
     assets: Array<{
         browser_download_url: string,
     }>,
@@ -38,19 +40,24 @@ const isNewVersionAvailable = (currentVersion:string, candidateVersion: string):
 const VersionCheck = () => {
     const toastId = useRef<ReactText|null>(null);
     const newVersionUrl = useRef('');
+    const releaseNotesUrl = useRef(GITHUB_RELEASES_LATEST_PAGE);
     const [ isDownloading, setIsDownloading ] = useState(false);
     const isDownloadingRef = useRef(false);
     const currentVersion = packageJson.version;
+    const clearToastId = () => {
+        toastId.current = null;
+    };
 
     const NewVersionButton = () => {
         return <div style={{ paddingRight: 15 }}>
             <Button
                 onClick={() => {
                     if (!newVersionUrl.current) {
-                        return;
+                        window.Main.openUrl(releaseNotesUrl.current);
+                    } else {
+                        window.Main.downloadNewVersion(newVersionUrl.current);
+                        setIsDownloading(true);
                     }
-                    window.Main.downloadNewVersion(newVersionUrl.current);
-                    setIsDownloading(true);
                 }}
                 variant="text"
                 sx={{
@@ -65,11 +72,27 @@ const VersionCheck = () => {
                 <DownloadIcon/>
                 <Trans>New version is available, click here to download.</Trans>
             </Button>
+            <Button
+                onClick={() => {
+                    window.Main.openUrl(releaseNotesUrl.current);
+                }}
+                variant="text"
+                sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    color: 'inherit',
+                    '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    },
+                }}
+            >
+                View release notes
+            </Button>
         </div>
     }
 
     const toastNewVersionButton = (): ReactText => {
-        if (toastId.current) {
+        if (toastId.current !== null && toast.isActive(toastId.current)) {
             toast.update(toastId.current, {
                 render: <NewVersionButton />,
                 hideProgressBar: true,
@@ -77,10 +100,11 @@ const VersionCheck = () => {
                 theme: 'dark',
                 className: UPDATE_TOAST_CLASS,
                 style: UPDATE_TOAST_STYLE,
+                onClose: clearToastId,
             });
-            return '';
+            return toastId.current;
         } else {
-            return toast(<NewVersionButton />, {
+            const nextToastId = toast(<NewVersionButton />, {
                 position: "bottom-center",
                 autoClose: false,
                 hideProgressBar: true,
@@ -90,7 +114,10 @@ const VersionCheck = () => {
                 theme: 'dark',
                 className: UPDATE_TOAST_CLASS,
                 style: UPDATE_TOAST_STYLE,
+                onClose: clearToastId,
             });
+            toastId.current = nextToastId;
+            return nextToastId;
         }
     }
 
@@ -120,20 +147,24 @@ const VersionCheck = () => {
                 }
 
                 if (isNewVersionAvailable(currentVersion, release.name)) {
+                    releaseNotesUrl.current = release.html_url || GITHUB_RELEASES_LATEST_PAGE;
+
                     const isWin = window.Main.isWindows();
                     const setupAsset = release.assets.find(asset => asset.browser_download_url.includes(isWin ? 'win' : 'darwin'));
                     if (setupAsset) {
                         newVersionUrl.current = setupAsset.browser_download_url;
-                        if (!isDownloadingRef.current) {
-                            if (!toastId.current) {
-                                toastId.current = toastNewVersionButton();
-                            } else {
-                                toastNewVersionButton();
-                            }
-                        }
-                    } else if (manual) {
-                        toast.info('Update found, but no installer was found for this platform.');
+                    } else {
+                        newVersionUrl.current = '';
                     }
+
+                    if (!isDownloadingRef.current) {
+                        toastNewVersionButton();
+                    }
+
+                    if (!setupAsset && manual) {
+                        toast.info('Update found, installer not available for this platform. Opening release notes is still available.');
+                    }
+
                     dismissCheckingToast();
                     return;
                 }

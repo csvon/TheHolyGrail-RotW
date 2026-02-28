@@ -219,7 +219,7 @@ function createWindow() {
     closeApp();
   });
 
-  // registerUpdateDownloader(mainWindow);
+  registerUpdateDownloader(mainWindow);
   setupStreamFeed();
   runSilospenServer();
   

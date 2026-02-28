@@ -581,7 +581,7 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
                               },
                             }}
                           />}
-                          label={i18n.t`Include RotW Items (WIP)`}
+                          label={i18n.t`Include RotW Items`}
                           sx={{ '& .MuiFormControlLabel-label': { width: '220px' } }}
                         />
 

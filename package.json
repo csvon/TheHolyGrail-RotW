@@ -17,7 +17,7 @@
   "keywords": [],
   "license": "ISC",
   "dependencies": {
-    "@dschu012/d2s": "file:vendor/d2s",
+    "@dschu012/d2s": "https://github.com/viniciusrezende/d2s#master",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/icons-material": "^5.4.2",

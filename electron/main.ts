@@ -358,6 +358,9 @@ async function registerListeners() {
 
   ipcMain.handle('clearRecentFinds', async () => {
     itemsDatabase.clearRecentFinds();
+    BrowserWindow.getAllWindows().forEach(win =>
+      win.webContents.send('recentFindsCleared')
+    );
     updateDataToListeners();
   });
 

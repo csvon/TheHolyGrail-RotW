@@ -71,10 +71,11 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
 
   const { items, ethItems, stats, availableRunes } = fileReaderResponse;
 
-  // When main broadcasts that the persistent history was cleared, refresh our memos
+  // When main broadcasts that history/recent-finds were cleared, refresh views/memos.
   useEffect(() => {
     const handler = () => setHistoryVersion(v => v + 1);
     (window as any)?.Main?.on?.('everFoundCleared', handler);
+    (window as any)?.Main?.on?.('recentFindsCleared', handler);
     // no explicit cleanup needed because your Main.on helper calls removeAllListeners per registration
   }, []);
 

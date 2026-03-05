@@ -1,64 +1,103 @@
-# The Holy Grail (Diablo II: Resurrected - Reign of the Warlock)
+# The Holy Grail RotW
 
-Fork of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail) with additional support for **Reign of the Warlock (RotW)** and quality-of-life improvements.
+Fork of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail) focused on **Diablo II: Resurrected - Reign of the Warlock (RotW)** support and quality of life improvements.
 
-This desktop app scans your Diablo II: Resurrected offline save files and tracks your **Holy Grail** progress.
-Built with **Electron**, **React**, and **TypeScript**.
-
-Also check out [TheHolyGrail Public Tracker](https://github.com/pyrosplat/TheHolyGrail-Public-Tracker) (web app integration project).
+This desktop app scans offline save files, tracks Holy Grail progress, and provides item-level inspection in one place.  
+Stack: **Electron + React + TypeScript**
 
 <p align="center">
   <img src="docs/images/app-hero.png" alt="Holy Grail App Overview" width="900" />
 </p>
 
-## What's New In This Fork
+## Recent Improvements
 
-### RotW Support
-- Adds support for the new **Warlock** character.
-- Support for all new RotW uniques, sets, runewords, and charms (optional with a toggle).
-- Adds basic **shared stash** parsing for RotW:
-  - Reads all 5 shared stash pages.
-  - Reads rune presence from the runes tab (presence, but not quantity).
+- Direct inspect action for owned items from list/search results (magnifier icon).
+- Faster search flow:
+  - `Ctrl+F` or `Ctrl+Space` opens spotlight search.
+  - `Enter` opens item details when there is a single visible match.
+  - `Esc` clears active search.
+- Better item details rendering:
+  - Improved base defense/damage presentation.
+  - Combined min/max damage lines for readability.
+  - Cleaner repair stat text (fraction display).
+- Stale list/search state is now refreshed when grail settings change.
+- Improved parsed stat ordering for shared stash item details.
 
-### New Features
-- Recent finds accordion on the app home screen.
-- Added an Item Browser that lets you view every owned item and inspect full stats right inside the app, including exactly which character is holding each one.
-   - While inspecting an item, click any character name to instantly preview that character’s version and compare specs.
-   - Finding your best roll of an item now takes seconds !
+## Feature Overview
 
-  <img src="docs/images/item-hero.png" alt="Holy Grail Item Browser" width="350" />
+- Auto scan and watch save folders for file changes.
+- RotW support:
+  - Warlock grail toggle.
+  - RotW uniques, sets, runewords, and charms.
+- Item inspection:
+  - View full rolled stats for owned items.
+  - Jump between all owned copies.
+- Grail tracking modes:
+  - Normal / Ethereal / Both / Each.
+  - Softcore / Hardcore / Manual.
+- Optional persistent history (`Persist found on drop`) with "Previously found" markers.
+- Recent finds tracking (in-app + overlay), including clear action.
+- Overlay window for live progress (size, font, and recent-finds controls).
+- Sound notifications for new finds (default or custom `.wav` / `.mp3` / `.ogg`).
+- Runeword calculator link prefilled from currently available runes.
+- Share progress snapshot (copy to clipboard or save image).
+- Built-in update check and installer download from GitHub releases.
 
-### Current Limitations
-- Rune quantities are not decoded in shared stash (presence only).
+## Known Limitations
 
-## Core Features of [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail)
+- Shared stash runes tab currently tracks rune **presence**, not stack quantity.
+- Web Sync is currently disabled in this build.
 
-- Include **Sunder charms** in grail tracking.
-- Optional **persistent found items** mode:
-  - Enable in **Settings -> Persist found on drop**.
-  - Lets you count items found historically, even if no longer stored.
-- **Previously found** indicators for history-counted items.
-- Ability to clear persistent history with confirmation.
-- Display live grail progress over the game window without alt-tabbing.
-  - Compact, high-contrast design.
-  - Adjustable size in settings.
-  - Optional recent finds list.
-- **Sound notifications** for newly found items:
-  - Audio alerts can be configured for newly found items.
-  - Volume control
-  - Custom sound file support (`.wav`, `.mp3`, `.ogg`)
-- Theme and font customization options.
+## Quick Start (Users)
 
-## Getting Started
+1. Download the latest build from [Releases](https://github.com/csvon/TheHolyGrail-RotW/releases/latest).
+2. Launch the app.
+3. Click `Select folder to read saves from` and choose your Diablo II save directory.
+4. Optional: switch to Manual mode from the welcome screen if you do not want file scanning.
 
-### 
+## Build and Run (Development)
+
+Prerequisites:
+
+- Node.js
+- Yarn 1.x
+
+Commands:
+
 ```bash
-yarn install    # Install
-yarn start      # Run (development)
-yarn package    # Package app
-yarn build      # package + build-win
-yarn build-win  # build win installer
+yarn install    # install dependencies
+yarn start      # run in development
+yarn package    # package app
+yarn build      # package + windows installer build
+yarn build-win  # windows installer only
 ```
+
+## Screenshots
+
+<p align="left">
+  <img src="docs/images/item-inspector.png" alt="Item inspector" width="800" />
+</p>
+
+<p align="left">
+  <img src="docs/images/search.png" alt="Search spotlight" width="600" />
+</p>
+
+<p align="left">
+  <img src="docs/images/overlay_v1.png" alt="Overlay" width="600" />
+</p>
+
+<p align="left">
+  <img src="docs/images/previously-found-badge.png" alt="Previously found badge" width="500" />
+</p>
+
+<p align="left">
+  <img src="docs/images/sound_control.png" alt="Sound settings" width="700" />
+</p>
+
+## Related Projects
+
+- [pyrosplat/TheHolyGrail](https://github.com/pyrosplat/TheHolyGrail)
+- [pyrosplat/TheHolyGrail-Public-Tracker](https://github.com/pyrosplat/TheHolyGrail-Public-Tracker)
 
 ## License
 

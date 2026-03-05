@@ -363,6 +363,8 @@ export interface IWeaponDamage {
     maxdam: number;
     twohandmindam: number;
     twohandmaxdam: number;
+    throwmindam: number;
+    throwmaxdam: number;
 }
 export interface IEarAttributes {
     class: number;

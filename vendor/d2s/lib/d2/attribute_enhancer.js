@@ -135,7 +135,7 @@ function enhanceItem(item, constants, level, config, parent) {
     if (constants.armor_items[item.type]) {
         details = constants.armor_items[item.type];
         item.type_id = ItemType.Armor;
-        if (details.maxac) {
+        if (details.maxac && item.defense_rating == null) {
             if (item.ethereal == 0) {
                 item.defense_rating = details.maxac;
             }
@@ -157,6 +157,10 @@ function enhanceItem(item, constants, level, config, parent) {
                 base_damage.twohandmindam = details.min2d;
             if (details.max2d)
                 base_damage.twohandmaxdam = details.max2d;
+            if (details.minmd)
+                base_damage.throwmindam = details.minmd;
+            if (details.maxmd)
+                base_damage.throwmaxdam = details.maxmd;
         }
         else if (item.ethereal == 1) {
             if (details.mind)
@@ -167,6 +171,10 @@ function enhanceItem(item, constants, level, config, parent) {
                 base_damage.twohandmindam = Math.floor(details.min2d * 1.5);
             if (details.max2d)
                 base_damage.twohandmaxdam = Math.floor(details.max2d * 1.5);
+            if (details.minmd)
+                base_damage.throwmindam = Math.floor(details.minmd * 1.5);
+            if (details.maxmd)
+                base_damage.throwmaxdam = Math.floor(details.maxmd * 1.5);
         }
         item.base_damage = base_damage;
     }
@@ -193,7 +201,7 @@ function enhanceItem(item, constants, level, config, parent) {
             item.item_quality = details.iq;
         if (details.c)
             item.categories = details.c;
-        if (details.durability) {
+        if (details.durability && (item.max_durability == null || item.current_durability == null)) {
             if (item.ethereal == 0) {
                 item.current_durability = details.durability;
                 item.max_durability = details.durability;
@@ -253,6 +261,25 @@ function enhanceItem(item, constants, level, config, parent) {
         item.displayed_runeword_attributes = _enhanceAttributeDescription(item.runeword_attributes, constants, level, config);
         item.combined_magic_attributes = _groupAttributes(_allAttributes(item, constants), constants);
         item.displayed_combined_magic_attributes = _enhanceAttributeDescription(item.combined_magic_attributes, constants, level, config);
+    }
+    var effectiveAttributes = item.displayed_combined_magic_attributes || item.combined_magic_attributes || _allAttributes(item, constants);
+    if (item.type_id === ItemType.Armor && typeof item.defense_rating === "number") {
+        var baseDefenseCeiling = (details === null || details === void 0 ? void 0 : details.maxac)
+            ? (item.ethereal === 1 ? Math.floor(details.maxac * 1.5) : details.maxac)
+            : null;
+        var looksLikeBaseDefense = baseDefenseCeiling == null || item.defense_rating <= baseDefenseCeiling + 1;
+        if (looksLikeBaseDefense) {
+            item.defense_rating = _enhanceDefenseRating(item.defense_rating, effectiveAttributes);
+        }
+    }
+    if (item.type_id === ItemType.Weapon && item.base_damage) {
+        item.base_damage = _enhanceWeaponDamage(item.base_damage, effectiveAttributes);
+    }
+    if (typeof item.reqstr === "number" || typeof item.reqdex === "number") {
+        _enhanceRequirements(item, effectiveAttributes);
+    }
+    if (typeof item.max_durability === "number" || _maxAttributeValue(effectiveAttributes, "maxdurability") > 0) {
+        _enhanceDurability(item, effectiveAttributes);
     }
 }
 exports.enhanceItem = enhanceItem;
@@ -336,9 +363,12 @@ function _enhanceAttributeDescription(_magic_attributes, constants, level, confi
                     descString = "+%d% " + descString.replace(/}/gi, "").replace(/%\+?d%%/gi, "");
                 }
             }
-            property.description = descString.replace(/%d/gi, function () {
+            property.description = descString.replace(/%\+?d/gi, function (token) {
                 var v = property.values[count_1++];
-                return v;
+                if (token.toLowerCase() === "%+d" && typeof v === "number" && v >= 0) {
+                    return "+" + v;
+                }
+                return "" + v;
             });
         }
         else {
@@ -361,6 +391,125 @@ function _enhanceAttributeDescription(_magic_attributes, constants, level, confi
         }
     }
     return magic_attributes;
+}
+function _enhanceWeaponDamage(baseDamage, magicAttributes) {
+    var enhancedPercent = _sumAttributeValues(magicAttributes, "item_maxdamage_percent")
+        + _sumAttributeValues(magicAttributes, "item_maxdamage_percent_bytime")
+        + _sumAttributeValues(magicAttributes, "item_maxdamage_percent_perlevel");
+    var flatDamageBonus = _sumAttributeValues(magicAttributes, "item_normaldamage");
+    var minDamageBonus = _sumAttributeValues(magicAttributes, "mindamage")
+        + _sumAttributeValues(magicAttributes, "mindamage_bytime")
+        + _sumAttributeValues(magicAttributes, "mindamage_perlevel");
+    var maxDamageBonus = _sumAttributeValues(magicAttributes, "maxdamage")
+        + _sumAttributeValues(magicAttributes, "maxdamage_bytime")
+        + _sumAttributeValues(magicAttributes, "maxdamage_perlevel")
+        + _sumAttributeValues(magicAttributes, "item_maxdamage_bytime")
+        + _sumAttributeValues(magicAttributes, "item_maxdamage_perlevel");
+    var secondaryMinDamageBonus = _sumAttributeValues(magicAttributes, "secondary_mindamage");
+    var secondaryMaxDamageBonus = _sumAttributeValues(magicAttributes, "secondary_maxdamage");
+    var throwMinDamageBonus = _sumAttributeValues(magicAttributes, "item_throw_mindamage");
+    var throwMaxDamageBonus = _sumAttributeValues(magicAttributes, "item_throw_maxdamage");
+    var applyDamage = function (base, bonus) {
+        return Math.max(0, Math.floor((base * (100 + enhancedPercent)) / 100) + bonus + flatDamageBonus);
+    };
+    var damage = {};
+    if (typeof baseDamage.mindam === "number") {
+        damage.mindam = applyDamage(baseDamage.mindam, minDamageBonus);
+    }
+    if (typeof baseDamage.maxdam === "number") {
+        damage.maxdam = applyDamage(baseDamage.maxdam, maxDamageBonus);
+    }
+    if (typeof baseDamage.twohandmindam === "number") {
+        damage.twohandmindam = applyDamage(baseDamage.twohandmindam, minDamageBonus + secondaryMinDamageBonus);
+    }
+    if (typeof baseDamage.twohandmaxdam === "number") {
+        damage.twohandmaxdam = applyDamage(baseDamage.twohandmaxdam, maxDamageBonus + secondaryMaxDamageBonus);
+    }
+    if (typeof baseDamage.throwmindam === "number") {
+        damage.throwmindam = applyDamage(baseDamage.throwmindam, minDamageBonus + throwMinDamageBonus);
+    }
+    if (typeof baseDamage.throwmaxdam === "number") {
+        damage.throwmaxdam = applyDamage(baseDamage.throwmaxdam, maxDamageBonus + throwMaxDamageBonus);
+    }
+    return damage;
+}
+function _enhanceDefenseRating(baseDefense, magicAttributes) {
+    var enhancedPercent = _sumAttributeValues(magicAttributes, "item_armor_percent")
+        + _sumAttributeValues(magicAttributes, "item_armorpercent_bytime")
+        + _sumAttributeValues(magicAttributes, "item_armorpercent_perlevel");
+    var flatDefense = _sumAttributeValues(magicAttributes, "armorclass")
+        + _sumAttributeValues(magicAttributes, "item_armor_bytime")
+        + _sumAttributeValues(magicAttributes, "item_armor_perlevel");
+    return Math.max(0, Math.floor((baseDefense * (100 + enhancedPercent)) / 100) + flatDefense);
+}
+function _enhanceDurability(item, magicAttributes) {
+    var baseMaxDurability = typeof item.max_durability === "number" ? item.max_durability : 0;
+    var explicitMaxDurability = _maxAttributeValue(magicAttributes, "maxdurability");
+    var displayMaxDurability = Math.max(baseMaxDurability, explicitMaxDurability);
+    if (displayMaxDurability <= 0) {
+        return;
+    }
+    var percentBonus = _sumAttributeValues(magicAttributes, "item_maxdurability_percent");
+    if (percentBonus !== 0) {
+        displayMaxDurability = Math.max(1, Math.floor((displayMaxDurability * (100 + percentBonus)) / 100));
+    }
+    item.max_durability = displayMaxDurability;
+    if (typeof item.current_durability !== "number") {
+        item.current_durability = displayMaxDurability;
+    }
+    else if (item.current_durability > displayMaxDurability) {
+        item.current_durability = displayMaxDurability;
+    }
+}
+function _enhanceRequirements(item, magicAttributes) {
+    var reqPercent = _sumAttributeValues(magicAttributes, "item_req_percent");
+    var applyRequirements = function (baseRequirement) {
+        if (typeof baseRequirement !== "number") {
+            return baseRequirement;
+        }
+        var required = baseRequirement;
+        if (item.ethereal === 1) {
+            required = Math.max(0, required - 10);
+        }
+        if (reqPercent !== 0) {
+            required = Math.max(0, Math.floor((required * (100 + reqPercent)) / 100));
+        }
+        return required;
+    };
+    item.reqstr = applyRequirements(item.reqstr);
+    item.reqdex = applyRequirements(item.reqdex);
+}
+function _sumAttributeValues(magicAttributes, statName) {
+    var total = 0;
+    for (var _i = 0, _a = magicAttributes || []; _i < _a.length; _i++) {
+        var attribute = _a[_i];
+        if (!attribute || attribute.name !== statName || !attribute.values || !attribute.values.length) {
+            continue;
+        }
+        var value = typeof attribute.op_value === "number"
+            ? attribute.op_value
+            : attribute.values[attribute.values.length - 1];
+        if (typeof value === "number") {
+            total += value;
+        }
+    }
+    return total;
+}
+function _maxAttributeValue(magicAttributes, statName) {
+    var maxValue = 0;
+    for (var _i = 0, _a = magicAttributes || []; _i < _a.length; _i++) {
+        var attribute = _a[_i];
+        if (!attribute || attribute.name !== statName || !attribute.values || !attribute.values.length) {
+            continue;
+        }
+        var value = typeof attribute.op_value === "number"
+            ? attribute.op_value
+            : attribute.values[attribute.values.length - 1];
+        if (typeof value === "number" && value > maxValue) {
+            maxValue = value;
+        }
+    }
+    return maxValue;
 }
 function _compactAttributes(mods, constants) {
     var magic_attributes = [];

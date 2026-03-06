@@ -503,10 +503,11 @@ function _descFunc(
     }
     case 5:
     case 10: {
+      const scaled = Math.trunc((v * 100) / 128);
       if (descString.indexOf("%%") < 0) {
-        value = `${(v * 100) / 128}%`;
+        value = `${scaled}%`;
       } else {
-        value = (v * 100) / 128;
+        value = scaled;
       }
       break;
     }
@@ -516,7 +517,7 @@ function _descFunc(
     }
     case 13: {
       const clazz = constants.classes[property.values[0]];
-      property.description = `${sign}${v} ${clazz.as}`;
+      property.description = clazz?.as ? _sprintf(clazz.as, v) : `${sign}${v}`;
       break;
     }
     case 14: {

@@ -588,11 +588,12 @@ function _descFunc(property, constants, v, descFunc, descVal, descString, desc2)
         }
         case 5:
         case 10: {
+            var scaled = Math.trunc((v * 100) / 128);
             if (descString.indexOf("%%") < 0) {
-                value = (v * 100) / 128 + "%";
+                value = scaled + "%";
             }
             else {
-                value = (v * 100) / 128;
+                value = scaled;
             }
             break;
         }
@@ -602,7 +603,7 @@ function _descFunc(property, constants, v, descFunc, descVal, descString, desc2)
         }
         case 13: {
             var clazz = constants.classes[property.values[0]];
-            property.description = "" + sign + v + " " + clazz.as;
+            property.description = clazz && clazz.as ? _sprintf(clazz.as, v) : "" + sign + v;
             break;
         }
         case 14: {

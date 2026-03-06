@@ -23,4 +23,5 @@ Thumbs.db
 .idea/
 .vscode/
 examples/*
+vendor/d2s/examples/misc/
 

@@ -459,8 +459,15 @@ class ItemsStore {
                 return;
               }
             }
+            const indestructible = [
+              ...(item.magic_attributes || []),
+              ...(item.runeword_attributes || []),
+              ...(item.combined_magic_attributes || []),
+            ].some((attr) => attr?.name === 'item_indesctructible');
+
             const savedItem: ItemDetails = {
               ethereal: !!item.ethereal,
+              indestructible,
               ilevel: item.level,
               socketed: !!item.socketed,
               type: item.type,

@@ -536,7 +536,9 @@ export default function Popup({
                   </span>
                 </div>
               )}
-              {typeof selectedItem.currentDurability === 'number' && typeof selectedItem.maxDurability === 'number' && (
+              {!selectedItem.indestructible
+                && typeof selectedItem.currentDurability === 'number'
+                && typeof selectedItem.maxDurability === 'number' && (
                 <div>Durability: {selectedItem.currentDurability} of {selectedItem.maxDurability}</div>
               )}
               {typeof selectedItem.requiredStrength === 'number' && selectedItem.requiredStrength > 0 && (

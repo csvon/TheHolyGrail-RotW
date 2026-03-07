@@ -264,11 +264,7 @@ function enhanceItem(item, constants, level, config, parent) {
     }
     var effectiveAttributes = item.displayed_combined_magic_attributes || item.combined_magic_attributes || _allAttributes(item, constants);
     if (item.type_id === ItemType.Armor && typeof item.defense_rating === "number") {
-        var baseDefenseCeiling = (details === null || details === void 0 ? void 0 : details.maxac)
-            ? (item.ethereal === 1 ? Math.floor(details.maxac * 1.5) : details.maxac)
-            : null;
-        var looksLikeBaseDefense = baseDefenseCeiling == null || item.defense_rating <= baseDefenseCeiling + 1;
-        if (looksLikeBaseDefense) {
+        if (_shouldEnhanceDefenseRating(item.defense_rating, details, item.ethereal, effectiveAttributes)) {
             item.defense_rating = _enhanceDefenseRating(item.defense_rating, effectiveAttributes);
         }
     }
@@ -441,6 +437,59 @@ function _enhanceDefenseRating(baseDefense, magicAttributes) {
         + _sumAttributeValues(magicAttributes, "item_armor_bytime")
         + _sumAttributeValues(magicAttributes, "item_armor_perlevel");
     return Math.max(0, Math.floor((baseDefense * (100 + enhancedPercent)) / 100) + flatDefense);
+}
+function _shouldEnhanceDefenseRating(defenseRating, details, ethereal, magicAttributes) {
+    var maxBaseDefense = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.maxac, ethereal);
+    if (maxBaseDefense == null) {
+        return true;
+    }
+    if (defenseRating <= maxBaseDefense + 1) {
+        return true;
+    }
+    if (defenseRating > maxBaseDefense + 2) {
+        return false;
+    }
+    return !_couldBeDisplayedDefenseRating(defenseRating, details, ethereal, magicAttributes);
+}
+function _couldBeDisplayedDefenseRating(defenseRating, details, ethereal, magicAttributes) {
+    var enhancedPercent = _sumAttributeValues(magicAttributes, "item_armor_percent")
+        + _sumAttributeValues(magicAttributes, "item_armorpercent_bytime")
+        + _sumAttributeValues(magicAttributes, "item_armorpercent_perlevel");
+    var flatDefense = _sumAttributeValues(magicAttributes, "armorclass")
+        + _sumAttributeValues(magicAttributes, "item_armor_bytime")
+        + _sumAttributeValues(magicAttributes, "item_armor_perlevel");
+    if (enhancedPercent === 0 && flatDefense === 0) {
+        return false;
+    }
+    var denominator = 100 + enhancedPercent;
+    if (denominator <= 0) {
+        return false;
+    }
+    var adjustedDefense = defenseRating - flatDefense;
+    if (adjustedDefense < 0) {
+        return false;
+    }
+    var minBaseDefenseValue = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.minac, ethereal);
+    var minBaseDefense = minBaseDefenseValue !== null && minBaseDefenseValue !== void 0 ? minBaseDefenseValue : 0;
+    var maxBaseDefense = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.maxac, ethereal);
+    if (maxBaseDefense == null) {
+        return false;
+    }
+    var baseDefenseTolerance = 2;
+    var minPlausibleBase = Math.max(0, minBaseDefense);
+    var maxPlausibleBase = maxBaseDefense + baseDefenseTolerance;
+    var lowerBound = Math.ceil((adjustedDefense * 100) / denominator);
+    var upperBound = Math.floor((((adjustedDefense + 1) * 100) - 1) / denominator);
+    if (lowerBound > upperBound) {
+        return false;
+    }
+    return lowerBound <= maxPlausibleBase && upperBound >= minPlausibleBase;
+}
+function _getBaseDefenseBound(baseDefense, ethereal) {
+    if (typeof baseDefense !== "number") {
+        return null;
+    }
+    return ethereal === 1 ? Math.floor(baseDefense * 1.5) : baseDefense;
 }
 function _enhanceDurability(item, magicAttributes) {
     var baseMaxDurability = typeof item.max_durability === "number" ? item.max_durability : 0;

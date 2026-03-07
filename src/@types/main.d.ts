@@ -24,6 +24,7 @@ export type Item = {
 
 export type ItemDetails = {
   ethereal: boolean,
+  indestructible?: boolean,
   ilevel: number | null,
   socketed: boolean,
   type?: string,

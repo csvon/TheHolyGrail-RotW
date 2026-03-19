@@ -13,7 +13,8 @@ Stack: **Electron + React + TypeScript**
 
 - Direct inspect action for owned items from list/search results (magnifier icon).
 - Faster search flow:
-  - `Ctrl+F` or `Ctrl+Space` opens spotlight search.
+  - `Ctrl+F` always opens spotlight search.
+  - Secondary search shortcut is configurable in settings and can be recorded as a custom key combination.
   - `Enter` opens item details when there is a single visible match.
   - `Esc` clears active search.
 - Better item details rendering:

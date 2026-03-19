@@ -214,6 +214,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         <ButtonPanel>
           <Search
             search={search}
+            searchShortcut={appSettings.searchShortcut}
             onSearch={(text: string) => {
               setSearch(text);
             }}

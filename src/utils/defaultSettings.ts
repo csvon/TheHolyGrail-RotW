@@ -1,4 +1,5 @@
 import { GameMode, GameVersion, GrailType, Settings } from "../@types/main.d";
+import { defaultSearchShortcut } from "./searchShortcut";
 
 export const settingsKeys: {[name in keyof Settings]: name} = {
   saveDir: 'saveDir',
@@ -28,6 +29,7 @@ export const settingsKeys: {[name in keyof Settings]: name} = {
   webSyncApiKey: 'webSyncApiKey',
   webSyncUrl: 'webSyncUrl',
   grailConfigurationLocked: 'grailConfigurationLocked',
+  searchShortcut: 'searchShortcut',
 }
 
 const defaultSettings: Settings = {
@@ -58,6 +60,7 @@ const defaultSettings: Settings = {
   [settingsKeys.webSyncApiKey]: '',
   [settingsKeys.webSyncUrl]: 'http://localhost:3001',
   [settingsKeys.grailConfigurationLocked]: false,
+  [settingsKeys.searchShortcut]: defaultSearchShortcut,
 }
 
 export default defaultSettings;

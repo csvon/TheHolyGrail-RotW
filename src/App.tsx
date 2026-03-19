@@ -13,6 +13,7 @@ import VersionCheck from './components/Settings/VersionCheck';
 import { useTranslation } from 'react-i18next';
 import { FontsGlobalStyle } from './styles/fonts';
 import { playGrailSound } from './utils/soundUtils';
+import { normalizeStoredSearchShortcut } from './utils/searchShortcut';
 
 /* eslint-disable no-unused-vars */
 export enum UiState {
@@ -89,6 +90,11 @@ export function App() {
     }
     if (typeof settings.overlayScale === 'undefined') {
       settings.overlayScale = defaultSettings.overlayScale;
+    }
+    if (typeof settings.searchShortcut === 'undefined') {
+      settings.searchShortcut = defaultSettings.searchShortcut;
+    } else {
+      settings.searchShortcut = normalizeStoredSearchShortcut(settings.searchShortcut);
     }
 
     appSettings.current = settings;

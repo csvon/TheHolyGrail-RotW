@@ -4,6 +4,7 @@ import storage from 'electron-json-storage';
 import { eventToReply } from '../main';
 import { updateSettingsToListeners } from './stream';
 import defaultSettings from '../../src/utils/defaultSettings';
+import { normalizeStoredSearchShortcut } from '../../src/utils/searchShortcut';
 
 class SettingsStore {
   currentSettings: Settings = defaultSettings;
@@ -19,18 +20,28 @@ class SettingsStore {
 
   loadSettings = (): Settings => {
     const settings = (storage.getSync('settings') as any);
+    let shouldWriteBack = false;
     // Back-compat: migrate enableSaves -> persistFoundOnDrop
     if (settings && typeof settings.persistFoundOnDrop === 'undefined' && typeof settings.enableSaves !== 'undefined') {
       settings.persistFoundOnDrop = !!settings.enableSaves;
+      shouldWriteBack = true;
     }
     if (settings && typeof settings.verboseSaveFilesSummary === 'undefined' && typeof settings.verboseScanLogs !== 'undefined') {
       settings.verboseSaveFilesSummary = !!settings.verboseScanLogs;
+      shouldWriteBack = true;
+    }
+    if (settings) {
+      const normalizedSearchShortcut = normalizeStoredSearchShortcut(settings.searchShortcut);
+      if (settings.searchShortcut !== normalizedSearchShortcut) {
+        settings.searchShortcut = normalizedSearchShortcut;
+        shouldWriteBack = true;
+      }
     }
     const merged = {
       ...defaultSettings,
       ...settings
-    };    // Optionally write back the migrated structure (removes obsolete key)
-    if (settings && (typeof settings.enableSaves !== 'undefined' || typeof settings.verboseScanLogs !== 'undefined')) {
+    };
+    if (settings && shouldWriteBack) {
       try {
         const { enableSaves, verboseScanLogs, ...rest } = merged as any;
         storage.set('settings', rest, () => { });

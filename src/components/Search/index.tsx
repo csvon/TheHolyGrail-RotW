@@ -3,20 +3,26 @@ import { useTranslation } from "react-i18next";
 import { Box, IconButton, InputBase, Modal, Tooltip } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import * as Mousetrap from 'mousetrap';
+import { formatShortcutForDisplay, getSearchShortcutRecording, isReservedSearchShortcut, normalizeStoredSearchShortcut } from "../../utils/searchShortcut";
 
 type SearchBoxProps = {
   search: string,
+  searchShortcut: string,
   onSearch: (text: string) => void,
   onSubmit?: () => void,
 }
 
-export function Search({ search, onSearch, onSubmit }: SearchBoxProps) {
+export function Search({ search, searchShortcut, onSearch, onSubmit }: SearchBoxProps) {
   const { t } = useTranslation();
   const [showSpotlight, setShowSpotlight] = useState(false);
   const showRef = useRef(showSpotlight);
   const searchRef = useRef(search);
   const onSearchRef = useRef(onSearch);
   const onSubmitRef = useRef(onSubmit);
+  const normalizedShortcut = normalizeStoredSearchShortcut(searchShortcut);
+  const searchTooltip = normalizedShortcut === 'ctrl+f'
+    ? t('Search (Ctrl+F)')
+    : t('Search (Ctrl+F, {{shortcut}})', { shortcut: formatShortcutForDisplay(normalizedShortcut) });
 
   useEffect(() => {
     showRef.current = showSpotlight;
@@ -53,16 +59,17 @@ export function Search({ search, onSearch, onSubmit }: SearchBoxProps) {
   useEffect(() => {
     // Quick search shortcuts
     Mousetrap.bind('ctrl+f', () => {
-      openSpotlight(true);
-      return false;
-    });
-
-    Mousetrap.bind('ctrl+space', () => {
+      if (getSearchShortcutRecording()) {
+        return true;
+      }
       openSpotlight(true);
       return false;
     });
 
     Mousetrap.bind('esc', () => {
+      if (getSearchShortcutRecording()) {
+        return true;
+      }
       if (showRef.current || searchRef.current.length > 0) {
         cancelSearch();
         return false;
@@ -71,9 +78,31 @@ export function Search({ search, onSearch, onSubmit }: SearchBoxProps) {
     }, 'keydown');
 
     return () => {
-      Mousetrap.unbind(['ctrl+f', 'ctrl+space', 'esc']);
+      Mousetrap.unbind('ctrl+f');
+      Mousetrap.unbind(normalizedShortcut);
+      Mousetrap.unbind('esc');
     }
-  }, []);
+  }, [normalizedShortcut]);
+
+  useEffect(() => {
+    if (normalizedShortcut === 'ctrl+f' || isReservedSearchShortcut(normalizedShortcut)) {
+      return;
+    }
+
+    Mousetrap.unbind(normalizedShortcut);
+
+    Mousetrap.bind(normalizedShortcut, () => {
+      if (getSearchShortcutRecording()) {
+        return true;
+      }
+      openSpotlight(true);
+      return false;
+    });
+
+    return () => {
+      Mousetrap.unbind(normalizedShortcut);
+    }
+  }, [normalizedShortcut]);
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     onSearch(e.currentTarget.value);
@@ -114,7 +143,7 @@ export function Search({ search, onSearch, onSubmit }: SearchBoxProps) {
       </Box>
     )}
 
-    <Tooltip title={t('Search (Ctrl+F)')} arrow>
+    <Tooltip title={searchTooltip} arrow>
       <IconButton onClick={() => openSpotlight(false)}>
         <SearchIcon />
       </IconButton>

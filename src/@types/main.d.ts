@@ -147,6 +147,7 @@ export type Settings = {
   webSyncApiKey: string,
   webSyncUrl: string,
   grailConfigurationLocked: boolean,
+  searchShortcut: string,
 }
 
 export type HolyGrailSeed = IHolyGrailData & {

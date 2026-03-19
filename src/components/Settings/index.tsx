@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SearchIcon from '@mui/icons-material/Search';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import PictureInPictureIcon from '@mui/icons-material/PictureInPicture';
 import { TransitionProps } from '@mui/material/transitions';
@@ -36,6 +37,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import LinkIcon from '@mui/icons-material/Link';
 import SyncIcon from '@mui/icons-material/Sync';
 import packageJson from '../../../package.json';
+import { formatShortcutForDisplay, getShortcutFromKeyboardEvent, isReservedSearchShortcut, normalizeStoredSearchShortcut, setSearchShortcutRecording } from '../../utils/searchShortcut';
 
 const MANUAL_UPDATE_CHECK_EVENT = 'thg:check-updates';
 
@@ -58,6 +60,8 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
   const [iframeVisible, setIframeVisible] = useState(false);
   const [streamPort, setStreamPort] = useState(0);
   const [soundFileError, setSoundFileError] = useState<string>('');
+  const [searchShortcutError, setSearchShortcutError] = useState('');
+  const [isRecordingSearchShortcut, setIsRecordingSearchShortcut] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<{ message: string; success?: boolean } | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -70,6 +74,7 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
   });
   const { t } = useTranslation();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const searchShortcutRecorderRef = useRef<HTMLDivElement>(null);
 
   const handleAccordionChange = (section: string) => (_event: SyntheticEvent, isExpanded: boolean) => {
     setExpandedSections(prev => ({ ...prev, [section]: isExpanded }));
@@ -85,11 +90,73 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
     }
   }, [iframeVisible, streamPort]);
 
+  useEffect(() => {
+    return () => {
+      setSearchShortcutRecording(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isRecordingSearchShortcut) {
+      return;
+    }
+
+    const handleWindowKeyDown = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === 'Escape' && !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
+        setSearchShortcutError('');
+        setIsRecordingSearchShortcut(false);
+        setSearchShortcutRecording(false);
+        window.setTimeout(() => {
+          searchShortcutRecorderRef.current?.blur();
+        }, 0);
+        return;
+      }
+
+      const shortcut = getShortcutFromKeyboardEvent(event);
+      if (!shortcut) {
+        return;
+      }
+      if (isReservedSearchShortcut(shortcut)) {
+        setSearchShortcutError(t('That shortcut is reserved by the app'));
+        return;
+      }
+
+      setSearchShortcutError('');
+      saveSetting(settingsKeys.searchShortcut, normalizeStoredSearchShortcut(shortcut));
+      setIsRecordingSearchShortcut(false);
+      setSearchShortcutRecording(false);
+      window.setTimeout(() => {
+        searchShortcutRecorderRef.current?.blur();
+      }, 0);
+    };
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (searchShortcutRecorderRef.current?.contains(event.target as Node)) {
+        return;
+      }
+      setIsRecordingSearchShortcut(false);
+      setSearchShortcutRecording(false);
+    };
+
+    window.addEventListener('keydown', handleWindowKeyDown, true);
+    window.addEventListener('mousedown', handlePointerDown, true);
+
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeyDown, true);
+      window.removeEventListener('mousedown', handlePointerDown, true);
+    };
+  }, [isRecordingSearchShortcut, saveSetting, t]);
+
   const handleClickOpen = () => {
     setOpen(true);
   };
 
   const handleClose = () => {
+    setIsRecordingSearchShortcut(false);
+    setSearchShortcutRecording(false);
     setOpen(false);
   };
 
@@ -155,6 +222,25 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
   const handleVerboseSaveFilesSummary = (event: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = event.target.checked;
     window.Main.saveSetting(settingsKeys.verboseSaveFilesSummary, enabled);
+  };
+
+  const handleSearchShortcutKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isRecordingSearchShortcut && (event.key === 'Enter' || event.key === ' ')) {
+      setSearchShortcutError('');
+      setIsRecordingSearchShortcut(true);
+      setSearchShortcutRecording(true);
+    }
+  };
+
+  const handleStartSearchShortcutRecording = () => {
+    setSearchShortcutError('');
+    setIsRecordingSearchShortcut(true);
+    setSearchShortcutRecording(true);
+    window.setTimeout(() => {
+      searchShortcutRecorderRef.current?.focus();
+    }, 0);
   };
 
   const handleVolumeChange = (event: Event, newValue: number | number[]) => {
@@ -343,6 +429,7 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
 
   const gameMode: GameMode = appSettings.gameMode || GameMode.Softcore;
   const grailType: GrailType = appSettings.grailType || GrailType.Both;
+  const searchShortcut = normalizeStoredSearchShortcut(appSettings.searchShortcut);
   const currentVolume = Math.round((appSettings.soundVolume ?? 1) * 100);
   const currentOverlayScale = Math.round((appSettings.overlayScale ?? 1) * 100);
   const isGrailConfigLocked = appSettings.grailConfigurationLocked || false;
@@ -485,6 +572,68 @@ export default function SettingsPanel({ appSettings, onSaveSetting }: SettingsPa
                       }
                       label={t('Enabled')}
                     />
+                  </Box>
+                </ListItem>
+                <Divider />
+                <ListItem>
+                  <ListItemIcon sx={{ minWidth: 56 }}>
+                    <SearchIcon />
+                  </ListItemIcon>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                    <ListItemText
+                      primary={t('Search shortcut')}
+                      secondary={t('Ctrl+F always works. Click the recorder and press the shortcut you want to add.')}
+                      sx={{ maxWidth: '60%' }}
+                    />
+                    <Box sx={{ minWidth: 260, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box
+                        ref={searchShortcutRecorderRef}
+                        component="div"
+                        role="button"
+                        tabIndex={0}
+                        onClick={handleStartSearchShortcutRecording}
+                        onKeyDown={handleSearchShortcutKeyDown}
+                        sx={{
+                          width: '100%',
+                          borderRadius: 1.5,
+                          border: '1px solid',
+                          borderColor: searchShortcutError
+                            ? 'error.main'
+                            : isRecordingSearchShortcut
+                              ? '#CC5F43'
+                              : 'rgba(255, 255, 255, 0.18)',
+                          backgroundColor: isRecordingSearchShortcut
+                            ? 'rgba(204, 95, 67, 0.08)'
+                            : 'rgba(255, 255, 255, 0.03)',
+                          px: 1.25,
+                          py: 1,
+                          textAlign: 'left',
+                          alignItems: 'stretch',
+                          outline: 'none',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            borderColor: '#CC5F43',
+                            backgroundColor: 'rgba(204, 95, 67, 0.06)',
+                          },
+                          '&:focus-visible': {
+                            borderColor: '#CC5F43',
+                            boxShadow: '0 0 0 2px rgba(204, 95, 67, 0.2)',
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.35, width: '100%' }}>
+                          <Typography variant="caption" sx={{ color: isRecordingSearchShortcut ? '#CC5F43' : 'text.secondary', fontWeight: 600 }}>
+                            {isRecordingSearchShortcut ? t('Recording shortcut...') : t('Click to record shortcut')}
+                          </Typography>
+                          <Typography sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+                            {formatShortcutForDisplay(searchShortcut)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography variant="caption" color={searchShortcutError ? 'error.main' : 'text.secondary'}>
+                        {searchShortcutError || t('OS-reserved shortcuts may still be intercepted before the app sees them')}
+                      </Typography>
+                    </Box>
                   </Box>
                 </ListItem>
                 <Divider />

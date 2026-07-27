@@ -27,7 +27,28 @@ const buildRunewordsSeed = (runewordNames: string[]): Record<string, string> => 
   }, {} as Record<string, string>)
 );
 
-const coreRunewordsSeed = buildRunewordsSeed(Object.keys(coreRunewordGrailSeedData));
+const d2rRunewordGrailSeedData: Record<string, {}> = {
+  Bulwark: {},
+  Cure: {},
+  "Flickering Flame": {},
+  Ground: {},
+  Hearth: {},
+  Hustle: {},
+  Metamorphosis: {},
+  Mist: {},
+  Mosaic: {},
+  Obsession: {},
+  Pattern: {},
+  Plague: {},
+  Temper: {},
+  "Unbending Will": {},
+  Wisdom: {},
+};
+
+const coreRunewordsSeed = buildRunewordsSeed([
+  ...Object.keys(coreRunewordGrailSeedData),
+  ...Object.keys(d2rRunewordGrailSeedData),
+]);
 const warlockRunewordsSeed = buildRunewordsSeed(Object.keys(warlockRunewordGrailSeedData));
 const warlockEnabledRunewordsSeed = { ...coreRunewordsSeed, ...warlockRunewordsSeed };
 

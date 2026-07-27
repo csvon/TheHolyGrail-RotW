@@ -26,6 +26,23 @@ const HUFFMAN = [[[[["w","u"],[["8",["y",["5",["j",[]]]]],"h"]],["s",[["2","n"],
 // prettier-ignore
 const HUFFMAN_LOOKUP = { "0": { "v": 223, "l": 8 }, "1": { "v": 31, "l": 7 }, "2": { "v": 12, "l": 6 }, "3": { "v": 91, "l": 7 }, "4": { "v": 95, "l": 8 }, "5": { "v": 104, "l": 8 }, "6": { "v": 123, "l": 7 }, "7": { "v": 30, "l": 5 }, "8": { "v": 8, "l": 6 }, "9": { "v": 14, "l": 5 }, " ": { "v": 1, "l": 2 }, "a": { "v": 15, "l": 5 }, "b": { "v": 10, "l": 4 }, "c": { "v": 2, "l": 5 }, "d": { "v": 35, "l": 6 }, "e": { "v": 3, "l": 6 }, "f": { "v": 50, "l": 6 }, "g": { "v": 11, "l": 5 }, "h": { "v": 24, "l": 5 }, "i": { "v": 63, "l": 7 }, "j": { "v": 232, "l": 9 }, "k": { "v": 18, "l": 6 }, "l": { "v": 23, "l": 5 }, "m": { "v": 22, "l": 5 }, "n": { "v": 44, "l": 6 }, "o": { "v": 127, "l": 7 }, "p": { "v": 19, "l": 5 }, "q": { "v": 155, "l": 8 }, "r": { "v": 7, "l": 5 }, "s": { "v": 4, "l": 4 }, "t": { "v": 6, "l": 5 }, "u": { "v": 16, "l": 5 }, "v": { "v": 59, "l": 7 }, "w": { "v": 0, "l": 5 }, "x": { "v": 28, "l": 5 }, "y": { "v": 40, "l": 7 }, "z": { "v": 27, "l": 8 } };
 
+const runewordIdOverrides: Record<number, number> = {
+  // Some D2GS/RotW saves store runeword IDs offset from the constants table.
+  2718: 48,
+  2784: 196,
+  2785: 197,
+  2786: 198,
+  2787: 199,
+  2788: 200,
+  2789: 201,
+  2790: 202,
+  2791: 203,
+  3398: 204,
+  3074: 205,
+};
+
+const normalizeRunewordId = (runewordId: number): number => runewordIdOverrides[runewordId] || runewordId;
+
 export async function readCharItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig) {
   char.items = await readItems(reader, char.header.version, constants, config, char);
 }
@@ -253,10 +270,7 @@ export async function readItem(
     }
     if (item.given_runeword) {
       item.runeword_id = reader.ReadUInt16(12);
-      //fix delerium on d2gs??? why is this a thing?
-      if (item.runeword_id == 2718) {
-        item.runeword_id = 48;
-      }
+      item.runeword_id = normalizeRunewordId(item.runeword_id);
       if (constants.runewords[item.runeword_id]) {
         item.runeword_name = constants.runewords[item.runeword_id]!.n!;
       }
@@ -444,11 +458,7 @@ export async function writeItem(
     }
 
     if (item.given_runeword) {
-      //fix delerium on d2gs??? why is this a thing?
-      let runeword_id = item.runeword_id;
-      if (runeword_id == 2718) {
-        runeword_id = 48;
-      }
+      let runeword_id = normalizeRunewordId(item.runeword_id);
       writer.WriteUInt16(runeword_id, 12);
       writer.WriteUInt8(5, 4); //always 5?
     }

@@ -13,6 +13,7 @@ node_modules
 .npmrc
 docs/editor/data
 .webpack/
+.tmp/
 gameData
 *backup*
 out/

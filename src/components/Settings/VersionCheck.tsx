@@ -18,22 +18,58 @@ const UPDATE_TOAST_STYLE: CSSProperties = {
 
 type GitHubRelease = {
     name: string,
+    tag_name?: string,
     html_url?: string,
     assets: Array<{
         browser_download_url: string,
     }>,
 }
 
-const isNewVersionAvailable = (currentVersion:string, candidateVersion: string): boolean => {
-    if (currentVersion === candidateVersion) return false;
-    const candidate = candidateVersion.replace('v', '').split('.');
-    const current = currentVersion.replace('v', '').split('.');
-    for (let i = 0; i < current.length; i++) {
-        const a = current[i] ? parseInt(current[i]) : 0;
-        const b = candidate[i] ? parseInt(candidate[i]) : 0;
-        if (a > b) return false;
-        if (a < b) return true;
+const parseVersion = (version: string): { core: number[], prerelease: string[] } => {
+    const normalized = version.trim().replace(/^v/i, '').split('+')[0];
+    const [coreVersion, prereleaseVersion = ''] = normalized.split('-', 2);
+    return {
+        core: coreVersion.split('.').map(part => parseInt(part, 10) || 0),
+        prerelease: prereleaseVersion ? prereleaseVersion.split('.') : [],
+    };
+};
+
+const comparePrereleaseIdentifier = (current: string, candidate: string): number => {
+    const currentNumber = /^\d+$/.test(current) ? parseInt(current, 10) : null;
+    const candidateNumber = /^\d+$/.test(candidate) ? parseInt(candidate, 10) : null;
+
+    if (currentNumber !== null && candidateNumber !== null) {
+        return candidateNumber - currentNumber;
     }
+    if (currentNumber !== null) return 1;
+    if (candidateNumber !== null) return -1;
+    return candidate.localeCompare(current);
+};
+
+const isNewVersionAvailable = (currentVersion: string, candidateVersion: string): boolean => {
+    const current = parseVersion(currentVersion);
+    const candidate = parseVersion(candidateVersion);
+    const coreLength = Math.max(current.core.length, candidate.core.length);
+
+    for (let i = 0; i < coreLength; i++) {
+        const currentPart = current.core[i] || 0;
+        const candidatePart = candidate.core[i] || 0;
+        if (candidatePart > currentPart) return true;
+        if (candidatePart < currentPart) return false;
+    }
+
+    if (current.prerelease.length && !candidate.prerelease.length) return true;
+    if (!current.prerelease.length && candidate.prerelease.length) return false;
+
+    const prereleaseLength = Math.max(current.prerelease.length, candidate.prerelease.length);
+    for (let i = 0; i < prereleaseLength; i++) {
+        if (!current.prerelease[i]) return true;
+        if (!candidate.prerelease[i]) return false;
+        const diff = comparePrereleaseIdentifier(current.prerelease[i], candidate.prerelease[i]);
+        if (diff > 0) return true;
+        if (diff < 0) return false;
+    }
+
     return false;
 }
 
@@ -146,7 +182,8 @@ const VersionCheck = () => {
                     return;
                 }
 
-                if (isNewVersionAvailable(currentVersion, release.name)) {
+                const candidateVersion = release.tag_name || release.name;
+                if (isNewVersionAvailable(currentVersion, candidateVersion)) {
                     releaseNotesUrl.current = release.html_url || GITHUB_RELEASES_LATEST_PAGE;
 
                     const isWin = window.Main.isWindows();

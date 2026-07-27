@@ -25,7 +25,7 @@ export const warlockGrailSeedData: Record<string, any> = {
           "Bloodpact Shard": {},
         },
       },
-      "swords (1-h)": {
+      "swords (2-h)": {
         elite: {
           Dreadfang: {},
         },

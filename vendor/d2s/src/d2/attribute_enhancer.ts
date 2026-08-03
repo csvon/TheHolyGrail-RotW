@@ -263,7 +263,7 @@ function _enhanceAttributeDescription(
           descString = `+%d% ${descString.replace(/}/gi, "").replace(/%\+?d%%/gi, "")}`;
         }
       }
-      property.description = descString.replace(/%\+?d/gi, (token) => {
+      property.description = descString.replace(/%\+?d/gi, (token: string) => {
         const v = property.values[count++];
         if (token.toLowerCase() === "%+d" && typeof v === "number" && v >= 0) {
           return `+${v}`;
@@ -441,9 +441,9 @@ function _enhanceDurability(item: types.IItem, magicAttributes: types.IMagicProp
 
 function _enhanceRequirements(item: types.IItem, magicAttributes: types.IMagicProperty[]): void {
   const reqPercent = _sumAttributeValues(magicAttributes, "item_req_percent");
-  const applyRequirements = (baseRequirement: number | undefined): number | undefined => {
+  const applyRequirements = (baseRequirement: number | undefined): number => {
     if (typeof baseRequirement !== "number") {
-      return baseRequirement;
+      return 0;
     }
     let required = baseRequirement;
     if (item.ethereal === 1) {

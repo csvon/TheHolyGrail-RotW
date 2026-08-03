@@ -452,6 +452,7 @@ function _shouldEnhanceDefenseRating(defenseRating, details, ethereal, magicAttr
     return !_couldBeDisplayedDefenseRating(defenseRating, details, ethereal, magicAttributes);
 }
 function _couldBeDisplayedDefenseRating(defenseRating, details, ethereal, magicAttributes) {
+    var _a;
     var enhancedPercent = _sumAttributeValues(magicAttributes, "item_armor_percent")
         + _sumAttributeValues(magicAttributes, "item_armorpercent_bytime")
         + _sumAttributeValues(magicAttributes, "item_armorpercent_perlevel");
@@ -469,8 +470,7 @@ function _couldBeDisplayedDefenseRating(defenseRating, details, ethereal, magicA
     if (adjustedDefense < 0) {
         return false;
     }
-    var minBaseDefenseValue = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.minac, ethereal);
-    var minBaseDefense = minBaseDefenseValue !== null && minBaseDefenseValue !== void 0 ? minBaseDefenseValue : 0;
+    var minBaseDefense = (_a = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.minac, ethereal)) !== null && _a !== void 0 ? _a : 0;
     var maxBaseDefense = _getBaseDefenseBound(details === null || details === void 0 ? void 0 : details.maxac, ethereal);
     if (maxBaseDefense == null) {
         return false;
@@ -514,7 +514,7 @@ function _enhanceRequirements(item, magicAttributes) {
     var reqPercent = _sumAttributeValues(magicAttributes, "item_req_percent");
     var applyRequirements = function (baseRequirement) {
         if (typeof baseRequirement !== "number") {
-            return baseRequirement;
+            return 0;
         }
         var required = baseRequirement;
         if (item.ethereal === 1) {
@@ -652,7 +652,7 @@ function _descFunc(property, constants, v, descFunc, descVal, descString, desc2)
         }
         case 13: {
             var clazz = constants.classes[property.values[0]];
-            property.description = clazz && clazz.as ? _sprintf(clazz.as, v) : "" + sign + v;
+            property.description = (clazz === null || clazz === void 0 ? void 0 : clazz.as) ? _sprintf(clazz.as, v) : "" + sign + v;
             break;
         }
         case 14: {

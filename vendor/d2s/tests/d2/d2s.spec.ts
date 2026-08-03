@@ -7,6 +7,7 @@ import * as types from "../../src/d2/types";
 import * as request from "request";
 import { constants } from "../../src/data/versions/96_constant_data";
 import * as version99 from "../../src/data/versions/99_constant_data";
+import * as version105 from "../../src/data/versions/105_constant_data";
 
 /**
  * End to end tests.
@@ -84,6 +85,15 @@ describe("d2s", () => {
     const save = await read(inputstream);
     //console.log(JSON.stringify(save, null, 2));
     expect(save.header.name).to.eq("Wilhelm");
+  });
+
+  it("should read mercenary items from a version 105 character without the expansion status bit", async () => {
+    const inputstream = fs.readFileSync(path.join(__dirname, "../../examples/chars/105/Merc.d2s"));
+    const save = await read(inputstream, version105.constants);
+
+    expect(save.header.name).to.eq("MRBloodBoil");
+    expect(save.header.status.expansion).to.eq(false);
+    expect(save.merc_items.length).to.eq(3);
   });
 
   it("should read new character", async () => {

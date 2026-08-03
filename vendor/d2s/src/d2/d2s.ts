@@ -17,6 +17,17 @@ function reader(buffer: Uint8Array) {
   return new BitReader(buffer);
 }
 
+function hasMercItemSection(reader: BitReader): boolean {
+  const offset = reader.offset;
+  const header = reader.ReadString(2);
+  reader.SeekBit(offset);
+  return header === "jf";
+}
+
+function shouldReadExtendedItemSections(char: types.ID2S, reader: BitReader): boolean {
+  return char.header.status.expansion || hasMercItemSection(reader);
+}
+
 async function read(buffer: Uint8Array, constants?: types.IConstantData, userConfig?: types.IConfig): Promise<types.ID2S> {
   const char = {} as types.ID2S;
   const reader = new BitReader(buffer);
@@ -31,7 +42,7 @@ async function read(buffer: Uint8Array, constants?: types.IConstantData, userCon
   await readSkills(char, reader, constants);
   await items.readCharItems(char, reader, constants, config);
   await items.readCorpseItems(char, reader, constants, config);
-  if (char.header.status.expansion) {
+  if (shouldReadExtendedItemSections(char, reader)) {
     await items.readMercItems(char, reader, constants, config);
     await items.readGolemItems(char, reader, constants, config);
   }

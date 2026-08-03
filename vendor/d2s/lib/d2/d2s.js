@@ -72,6 +72,15 @@ function reader(buffer) {
     return new bitreader_1.BitReader(buffer);
 }
 exports.reader = reader;
+function hasMercItemSection(reader) {
+    var offset = reader.offset;
+    var header = reader.ReadString(2);
+    reader.SeekBit(offset);
+    return header === "jf";
+}
+function shouldReadExtendedItemSections(char, reader) {
+    return char.header.status.expansion || hasMercItemSection(reader);
+}
 function read(buffer, constants, userConfig) {
     return __awaiter(this, void 0, void 0, function () {
         var char, reader, config;
@@ -103,7 +112,7 @@ function read(buffer, constants, userConfig) {
                     return [4 /*yield*/, items.readCorpseItems(char, reader, constants, config)];
                 case 6:
                     _a.sent();
-                    if (!char.header.status.expansion) return [3 /*break*/, 9];
+                    if (!shouldReadExtendedItemSections(char, reader)) return [3 /*break*/, 9];
                     return [4 /*yield*/, items.readMercItems(char, reader, constants, config)];
                 case 7:
                     _a.sent();

@@ -1590,6 +1590,33 @@ export declare let constants: {
         ob?: undefined;
     } | {
         s: string;
+        sS: number;
+        sB: number;
+        cB?: undefined;
+        cS?: undefined;
+        sA?: undefined;
+        so?: undefined;
+        dF?: undefined;
+        dV?: undefined;
+        dP?: undefined;
+        dN?: undefined;
+        dg?: undefined;
+        dgF?: undefined;
+        dgV?: undefined;
+        dgP?: undefined;
+        o?: undefined;
+        os?: undefined;
+        vS?: undefined;
+        np?: undefined;
+        dR?: undefined;
+        dE?: undefined;
+        sP?: undefined;
+        e?: undefined;
+        d2?: undefined;
+        op?: undefined;
+        ob?: undefined;
+    } | {
+        s: string;
         sB: number;
         sA: number;
         sP: number;

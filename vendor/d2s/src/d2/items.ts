@@ -171,13 +171,41 @@ export async function readItems(
         throw error;
       }
 
-      // v105 post-ID metadata occasionally leaves item parsing one byte early.
-      // Retry this item once from +8 bits and keep strict failure if it still errors.
-      reader.offset = itemStartOffset + 8;
-      items.push(await readItem(reader, version, constants, config));
+      let recoveredItem: types.IItem | null = null;
+      let recoveredOffset = 0;
+      for (let bitShift = 8; bitShift <= 96; bitShift += 8) {
+        reader.offset = itemStartOffset + bitShift;
+        try {
+          const item = await readItem(reader, version, constants, config);
+          if (isKnownItemType(item, constants)) {
+            recoveredItem = item;
+            recoveredOffset = reader.offset;
+            break;
+          }
+        } catch {
+          // Keep trying byte-aligned starts. If none work, throw the original error.
+        }
+      }
+
+      if (!recoveredItem) {
+        reader.offset = itemStartOffset;
+        throw error;
+      }
+
+      reader.offset = recoveredOffset;
+      items.push(recoveredItem);
     }
   }
   return items;
+}
+
+function isKnownItemType(item: types.IItem, constants: types.IConstantData): boolean {
+  return !!(
+    item.is_ear ||
+    constants.armor_items[item.type] ||
+    constants.weapon_items[item.type] ||
+    constants.other_items[item.type]
+  );
 }
 
 export async function writeItems(
@@ -311,7 +339,7 @@ export async function readItem(
     }
     // D2R v105 adds a tail bit in this section before stackable quantity.
     if (version === 105) {
-      reader.SkipBits(1);
+      item._unknown_data.v105_pre_quantity_bit = reader.ReadUInt8(1);
     }
 
     if (constants.stackables[item.type]) {
@@ -494,6 +522,10 @@ export async function writeItem(
       }
     }
 
+    if (version === 105) {
+      writer.WriteUInt8(item._unknown_data.v105_pre_quantity_bit || 0, 1);
+    }
+
     if (constants.stackables[item.type]) {
       writer.WriteUInt16(item.quantity, 9);
     }
@@ -519,6 +551,10 @@ export async function writeItem(
     if (item.given_runeword === 1) {
       _writeMagicProperties(writer, item.runeword_attributes, constants);
     }
+  }
+
+  if (version === 105) {
+    writer.WriteBit(0);
   }
 
   writer.Align();
@@ -642,7 +678,14 @@ function _writeSimpleBits(writer: BitWriter, version: number, item: types.IItem,
   writer.WriteBit(item.personalized);
   writer.WriteBits(item._unknown_data.b25 || new Uint8Array(1), 1); //IFLAG_LOWQUALITY
   writer.WriteBit(item.given_runeword);
-  writer.WriteBits(item._unknown_data.b27_31 || new Uint8Array(5), 5);
+  const b27_31 = item._unknown_data.b27_31 || new Uint8Array(5);
+  if (version === 105 && b27_31[1]) {
+    const stableBits = new Uint8Array(b27_31);
+    stableBits[1] = 0;
+    writer.WriteBits(stableBits, 5);
+  } else {
+    writer.WriteBits(b27_31, 5);
+  }
 
   const itemVersion = item.version != null ? item.version : "101";
   if (version <= 0x60) {

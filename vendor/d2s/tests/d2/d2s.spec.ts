@@ -96,6 +96,36 @@ describe("d2s", () => {
     expect(save.merc_items.length).to.eq(3);
   });
 
+  it("should read version 105 character items before and after leaving the game", async () => {
+    for (const file of ["SorcF_before.d2s", "SorcF_after.d2s"]) {
+      const inputstream = fs.readFileSync(path.join(__dirname, `../../examples/chars/105/9/${file}`));
+      const save = await read(inputstream, version105.constants);
+
+      expect(save.header.name).to.eq("SorcF");
+      expect(save.items.length).to.eq(61);
+      expect(save.items.slice(-3).map((item) => item.type)).to.deep.eq(["tbk", "oba", "uit"]);
+      expect(save.merc_items.length).to.eq(3);
+    }
+  });
+
+  it("should preserve the Undead Crown across the version 105 pickup-state snapshots", async () => {
+    const snapshots = [
+      ["SorcF_before.d2s", 60],
+      ["SorcF_after.d2s", 61],
+    ] as const;
+
+    for (const [file, expectedItemCount] of snapshots) {
+      const inputstream = fs.readFileSync(path.join(__dirname, `../../examples/chars/105/10/${file}`));
+      const save = await read(inputstream, version105.constants);
+      const crown = save.items.find((item) => item.type === "crn" && item.unique_name === "Undead Crown");
+
+      expect(save.header.name).to.eq("SorcF");
+      expect(save.items.length).to.eq(expectedItemCount);
+      expect(crown).to.exist;
+      expect(crown?.id).to.eq(2855870726);
+    }
+  });
+
   it("should read new character", async () => {
     const inputstream = fs.readFileSync(path.join(__dirname, "../../examples/chars/96/simple.d2s"));
     const save = await read(inputstream, constants);

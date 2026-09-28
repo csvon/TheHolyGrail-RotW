@@ -272,9 +272,9 @@ exports.writeCorpseItem = writeCorpseItem;
 function readItems(reader, version, constants, config, char) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var items, header, count, i, itemStartOffset, _b, _c, error_1, message, canRetryWithOneByteShift, _d, _e;
-        return __generator(this, function (_f) {
-            switch (_f.label) {
+        var items, header, count, i, itemStartOffset, _b, _c, error_1, message, canRetryWithOneByteShift, recoveredItem, recoveredOffset, bitShift, item, _d;
+        return __generator(this, function (_e) {
+            switch (_e.label) {
                 case 0:
                     items = [];
                     header = reader.ReadString(2);
@@ -287,43 +287,74 @@ function readItems(reader, version, constants, config, char) {
                     }
                     count = reader.ReadUInt16();
                     i = 0;
-                    _f.label = 1;
+                    _e.label = 1;
                 case 1:
-                    if (!(i < count)) return [3 /*break*/, 7];
+                    if (!(i < count)) return [3 /*break*/, 12];
                     itemStartOffset = reader.offset;
-                    _f.label = 2;
+                    _e.label = 2;
                 case 2:
-                    _f.trys.push([2, 4, , 6]);
+                    _e.trys.push([2, 4, , 11]);
                     _c = (_b = items).push;
                     return [4 /*yield*/, readItem(reader, version, constants, config)];
                 case 3:
-                    _c.apply(_b, [_f.sent()]);
-                    return [3 /*break*/, 6];
+                    _c.apply(_b, [_e.sent()]);
+                    return [3 /*break*/, 11];
                 case 4:
-                    error_1 = _f.sent();
+                    error_1 = _e.sent();
                     message = ((_a = error_1) === null || _a === void 0 ? void 0 : _a.message) || String(error_1);
                     canRetryWithOneByteShift = version === 105 &&
                         (message.includes('Invalid Stat Id') || message.includes('Save Bits is undefined'));
                     if (!canRetryWithOneByteShift) {
                         throw error_1;
                     }
-                    // v105 post-ID metadata occasionally leaves item parsing one byte early.
-                    // Retry this item once from +8 bits and keep strict failure if it still errors.
-                    reader.offset = itemStartOffset + 8;
-                    _e = (_d = items).push;
-                    return [4 /*yield*/, readItem(reader, version, constants, config)];
+                    recoveredItem = null;
+                    recoveredOffset = 0;
+                    bitShift = 8;
+                    _e.label = 5;
                 case 5:
-                    _e.apply(_d, [_f.sent()]);
-                    return [3 /*break*/, 6];
+                    if (!(bitShift <= 96)) return [3 /*break*/, 10];
+                    reader.offset = itemStartOffset + bitShift;
+                    _e.label = 6;
                 case 6:
+                    _e.trys.push([6, 8, , 9]);
+                    return [4 /*yield*/, readItem(reader, version, constants, config)];
+                case 7:
+                    item = _e.sent();
+                    if (isKnownItemType(item, constants)) {
+                        recoveredItem = item;
+                        recoveredOffset = reader.offset;
+                        return [3 /*break*/, 10];
+                    }
+                    return [3 /*break*/, 9];
+                case 8:
+                    _d = _e.sent();
+                    return [3 /*break*/, 9];
+                case 9:
+                    bitShift += 8;
+                    return [3 /*break*/, 5];
+                case 10:
+                    if (!recoveredItem) {
+                        reader.offset = itemStartOffset;
+                        throw error_1;
+                    }
+                    reader.offset = recoveredOffset;
+                    items.push(recoveredItem);
+                    return [3 /*break*/, 11];
+                case 11:
                     i++;
                     return [3 /*break*/, 1];
-                case 7: return [2 /*return*/, items];
+                case 12: return [2 /*return*/, items];
             }
         });
     });
 }
 exports.readItems = readItems;
+function isKnownItemType(item, constants) {
+    return !!(item.is_ear ||
+        constants.armor_items[item.type] ||
+        constants.weapon_items[item.type] ||
+        constants.other_items[item.type]);
+}
 function writeItems(items, version, constants, config) {
     return __awaiter(this, void 0, void 0, function () {
         var writer, i, _a, _b;
@@ -466,7 +497,7 @@ function readItem(reader, version, originalConstants, config, parent) {
                         }
                         // D2R v105 adds a tail bit in this section before stackable quantity.
                         if (version === 105) {
-                            reader.SkipBits(1);
+                            item._unknown_data.v105_pre_quantity_bit = reader.ReadUInt8(1);
                         }
                         if (constants.stackables[item.type]) {
                             item.quantity = reader.ReadUInt16(9);
@@ -646,6 +677,9 @@ function writeItem(item, version, constants, config) {
                                 writer.WriteUInt16(item.current_durability, constants.magical_properties[72].sB);
                             }
                         }
+                        if (version === 105) {
+                            writer.WriteUInt8(item._unknown_data.v105_pre_quantity_bit || 0, 1);
+                        }
                         if (constants.stackables[item.type]) {
                             writer.WriteUInt16(item.quantity, 9);
                         }
@@ -666,6 +700,9 @@ function writeItem(item, version, constants, config) {
                         if (item.given_runeword === 1) {
                             _writeMagicProperties(writer, item.runeword_attributes, constants);
                         }
+                    }
+                    if (version === 105) {
+                        writer.WriteBit(0);
                     }
                     writer.Align();
                     if (!(item.nr_of_items_in_sockets > 0 && item.simple_item === 0)) return [3 /*break*/, 4];
@@ -799,7 +836,15 @@ function _writeSimpleBits(writer, version, item, constants, config) {
     writer.WriteBit(item.personalized);
     writer.WriteBits(item._unknown_data.b25 || new Uint8Array(1), 1); //IFLAG_LOWQUALITY
     writer.WriteBit(item.given_runeword);
-    writer.WriteBits(item._unknown_data.b27_31 || new Uint8Array(5), 5);
+    var b27_31 = item._unknown_data.b27_31 || new Uint8Array(5);
+    if (version === 105 && b27_31[1]) {
+        var stableBits = new Uint8Array(b27_31);
+        stableBits[1] = 0;
+        writer.WriteBits(stableBits, 5);
+    }
+    else {
+        writer.WriteBits(b27_31, 5);
+    }
     var itemVersion = item.version != null ? item.version : "101";
     if (version <= 0x60) {
         // 0 = pre-1.08; 1 = 1.08/1.09 normal; 2 = 1.10 normal; 100 = 1.08/1.09 expansion; 101 = 1.10 expansion

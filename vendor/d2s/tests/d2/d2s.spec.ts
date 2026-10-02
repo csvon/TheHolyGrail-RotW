@@ -126,6 +126,46 @@ describe("d2s", () => {
     }
   });
 
+  it("should read Frostwind on the cursor with trailing version 105 pickup metadata", async () => {
+    // Both supplied snapshots contain the same cursor-held item, despite their filenames.
+    for (const file of ["SorcF_itemInHand.d2s", "SorcF_itemInInventory.d2s"]) {
+      const input = fs.readFileSync(path.join(__dirname, `../../examples/chars/105/11/${file}`));
+      const save = await read(input, version105.constants);
+      const frostwind = save.items[save.items.length - 1];
+
+      expect(save.items.length).to.eq(61);
+      expect(frostwind.unique_name).to.eq("Frostwind");
+      expect(frostwind.id).to.eq(2564802160);
+      expect(frostwind.location_id).to.eq(4);
+      expect(frostwind.magic_attributes.length).to.eq(7);
+      expect(save.is_dead).to.eq(0);
+      expect(save.corpse_items).to.deep.eq([]);
+      expect(save.merc_items.length).to.eq(3);
+    }
+  });
+
+  it("should reject invalid or distant section boundaries after version 105 pickup metadata", async () => {
+    const input = fs.readFileSync(path.join(__dirname, "../../examples/chars/105/11/SorcF_itemInHand.d2s"));
+    const signature = Buffer.from("JM\0\0jf");
+    const corpseOffset = input.indexOf(signature);
+    expect(corpseOffset).to.eq(2722);
+    const invalidCorpse = Buffer.from(input);
+    invalidCorpse[corpseOffset] = 0;
+    const invalidMercenary = Buffer.from(input);
+    invalidMercenary[corpseOffset + 4] = 0;
+    const distantBoundary = Buffer.concat([input.slice(0, corpseOffset), Buffer.alloc(6), input.slice(corpseOffset)]);
+
+    for (const malformed of [invalidCorpse, invalidMercenary, distantBoundary]) {
+      let failure: Error | undefined;
+      try {
+        await read(malformed, version105.constants);
+      } catch (error) {
+        failure = error as Error;
+      }
+      expect(failure?.message).to.eq("Corpse header 'JM' not found at position 21720");
+    }
+  });
+
   it("should read new character", async () => {
     const inputstream = fs.readFileSync(path.join(__dirname, "../../examples/chars/96/simple.d2s"));
     const save = await read(inputstream, constants);

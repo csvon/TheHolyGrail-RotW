@@ -78,15 +78,36 @@ var runewordIdOverrides = {
 };
 var normalizeRunewordId = function (runewordId) { return runewordIdOverrides[runewordId] || runewordId; };
 function readCharItems(char, reader, constants, config) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var _c, lastItem, sectionOffset, header, extraBytes, candidateOffset, signature;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
-                    _a = char;
+                    _c = char;
                     return [4 /*yield*/, readItems(reader, char.header.version, constants, config, char)];
                 case 1:
-                    _a.items = _b.sent();
+                    _c.items = _d.sent();
+                    lastItem = char.items[char.items.length - 1];
+                    if (char.header.version === 105 && ((_b = (_a = lastItem === null || lastItem === void 0 ? void 0 : lastItem._unknown_data) === null || _a === void 0 ? void 0 : _a.b27_31) === null || _b === void 0 ? void 0 : _b[1])) {
+                        sectionOffset = reader.offset;
+                        header = reader.ReadString(2);
+                        reader.offset = sectionOffset;
+                        if (header !== "JM") {
+                            for (extraBytes = 1; extraBytes <= 12; extraBytes++) {
+                                candidateOffset = sectionOffset + extraBytes * 8;
+                                if (candidateOffset + 48 > reader.bits.length)
+                                    break;
+                                reader.offset = candidateOffset;
+                                signature = reader.ReadString(6);
+                                reader.offset = sectionOffset;
+                                if (signature === "JM\0\0jf") {
+                                    reader.offset = candidateOffset;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     return [2 /*return*/];
             }
         });

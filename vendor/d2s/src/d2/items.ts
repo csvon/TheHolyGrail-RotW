@@ -45,6 +45,30 @@ const normalizeRunewordId = (runewordId: number): number => runewordIdOverrides[
 
 export async function readCharItems(char: types.ID2S, reader: BitReader, constants: types.IConstantData, config: types.IConfig) {
   char.items = await readItems(reader, char.header.version, constants, config, char);
+
+  const lastItem = char.items[char.items.length - 1];
+  if (char.header.version === 105 && lastItem?._unknown_data?.b27_31?.[1]) {
+    // A newly collected item can retain extra metadata even after leaving the game.
+    // readItems recovers at the next item, but a final item (including one on the
+    // cursor) needs recovery at the section boundary instead. Only accept the full
+    // empty-corpse + mercenary signature within the same 12-byte recovery window.
+    const sectionOffset = reader.offset;
+    const header = reader.ReadString(2);
+    reader.offset = sectionOffset;
+    if (header !== "JM") {
+      for (let extraBytes = 1; extraBytes <= 12; extraBytes++) {
+        const candidateOffset = sectionOffset + extraBytes * 8;
+        if (candidateOffset + 48 > reader.bits.length) break;
+        reader.offset = candidateOffset;
+        const signature = reader.ReadString(6);
+        reader.offset = sectionOffset;
+        if (signature === "JM\0\0jf") {
+          reader.offset = candidateOffset;
+          break;
+        }
+      }
+    }
+  }
 }
 
 export async function writeCharItems(char: types.ID2S, constants: types.IConstantData, config: types.IConfig): Promise<Uint8Array> {

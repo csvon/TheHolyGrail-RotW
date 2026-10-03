@@ -1,3 +1,5 @@
+import { normalizeSunderGrailId } from './sunderCharms';
+
 const simplifyItemName = (name: string): string => name.replace(/[^a-z0-9]/gi, '').toLowerCase();
 
 type UniqueSetNameNormalizationRule = {
@@ -40,5 +42,5 @@ export const normalizeParsedUniqueOrSetLookupName = (originalName: string, itemT
     return true;
   });
 
-  return aliasMatch ? simplifyItemName(aliasMatch.canonicalSeedName) : simplified;
+  return aliasMatch ? simplifyItemName(aliasMatch.canonicalSeedName) : normalizeSunderGrailId(simplified);
 };

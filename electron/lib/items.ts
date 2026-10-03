@@ -19,8 +19,9 @@ import { updateDataToListeners } from './stream';
 import { webSyncManager } from './webSync';
 import { runesMapping } from './runesMapping';
 import { getSaveGamesFolder } from 'platform-folders';
-import { markManyEverFound } from './everFound';
+import { getEverFound, markManyEverFound } from './everFound';
 import { normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
+import { getSunderGrailName, mergeSunderItems } from './sunderCharms';
 const { readFile } = promises;
 
 class ItemsStore {
@@ -57,7 +58,7 @@ class ItemsStore {
     storage.set('recentFinds', this.recentFinds, (error) => {
       if (error) console.log('Error resetting recent finds on startup:', error);
     });
-    this.everFound = (storage.getSync('everFound') as Record<string, boolean>) || {};
+    this.everFound = getEverFound();
     setInterval(this.tickReader, 500);
     try { d2s.getConstantData(96); } catch (e) { d2s.setConstantData(96, constants96); }
     try { d2s.getConstantData(97); } catch (e) { d2s.setConstantData(97, constants96); }
@@ -224,18 +225,22 @@ class ItemsStore {
         data.unmappedItems = {};
       }
       // filling in the "inSaves" information that is missing in older format
-      Object.keys(this.currentData.items).forEach((key) => {
-        if (!this.currentData.items[key].inSaves) {
-          this.currentData.items[key] = this.createManualItem(1);
+      Object.keys(data.items).forEach((key) => {
+        if (!data.items[key].inSaves) {
+          data.items[key] = this.createManualItem(1);
         }
       })
-      Object.keys(this.currentData.ethItems).forEach((key) => {
-        if (!this.currentData.ethItems[key].inSaves) {
-          this.currentData.ethItems[key] = this.createManualItem(1);
+      Object.keys(data.ethItems).forEach((key) => {
+        if (!data.ethItems[key].inSaves) {
+          data.ethItems[key] = this.createManualItem(1);
         }
       })
 
-      this.currentData = data;
+      this.currentData = {
+        ...data,
+        items: mergeSunderItems(data.items),
+        ethItems: mergeSunderItems(data.ethItems),
+      };
       this.fillInAvailableRunes();
     }
   }
@@ -427,7 +432,7 @@ class ItemsStore {
             let originalName = item.unique_name || item.set_name || '';
             let name = normalizeParsedUniqueOrSetLookupName(originalName, item.type);
             // Fix double apostrophes in display name
-            let displayName = originalName.replace(/'{2,}/g, "'");
+            let displayName = getSunderGrailName(originalName) || originalName.replace(/'{2,}/g, "'");
             
             if (name.indexOf('rainbowfacet') !== -1) {
               let type = '';

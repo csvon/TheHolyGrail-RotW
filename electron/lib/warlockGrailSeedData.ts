@@ -41,22 +41,6 @@ export const warlockGrailSeedData: Record<string, any> = {
           "Entropy Locket": {},
         },
       },
-      charms: {
-        sunder: {
-          "Latent Black Cleft": {},
-          "Latent Bone Break": {},
-          "Latent Cold Rupture": {},
-          "Latent Crack of the Heavens": {},
-          "Latent Flame Rift": {},
-          "Latent Rotting Fissure": {},
-          "Renewed Black Cleft": {},
-          "Renewed Bone Break": {},
-          "Renewed Cold Rupture": {},
-          "Renewed Crack of the Heavens": {},
-          "Renewed Flame Rift": {},
-          "Renewed Rotting Fissure": {},
-        },
-      },
       jewels: {
         all: {
           "Defender's Fire": {},

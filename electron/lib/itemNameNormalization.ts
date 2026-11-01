@@ -23,7 +23,18 @@ const uniqueSetNameNormalizationRules: UniqueSetNameNormalizationRule[] = [
   { normalizedName: 'victorssilk', canonicalSeedName: 'Silks of the Victor' },
   { normalizedName: 'theminataur', canonicalSeedName: 'The Minotaur' },
   { normalizedName: 'thechieftan', canonicalSeedName: 'The Chieftain' },
+  { normalizedName: 'mcauleysparagon', canonicalSeedName: "Sander's Paragon" },
+  { normalizedName: 'mcauleysriprap', canonicalSeedName: "Sander's Riprap" },
+  { normalizedName: 'mcauleyssuperstition', canonicalSeedName: "Sander's Superstition" },
+  { normalizedName: 'mcauleystaboo', canonicalSeedName: "Sander's Taboo" },
 ];
+
+export const normalizeParsedUniqueOrSetDisplayName = (originalName: string, itemType?: string): string => {
+  const simplified = simplifyItemName(originalName || '');
+  const aliasMatch = uniqueSetNameNormalizationRules.find((entry) =>
+    entry.normalizedName === simplified && (!entry.itemType || entry.itemType === itemType));
+  return aliasMatch?.canonicalSeedName || originalName.replace(/'{2,}/g, "'");
+};
 
 export const normalizeParsedUniqueOrSetLookupName = (originalName: string, itemType?: string): string => {
   const simplified = simplifyItemName(originalName || '');

@@ -20,7 +20,7 @@ import { webSyncManager } from './webSync';
 import { runesMapping } from './runesMapping';
 import { getSaveGamesFolder } from 'platform-folders';
 import { getEverFound, markManyEverFound } from './everFound';
-import { normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
+import { normalizeParsedUniqueOrSetDisplayName, normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
 import { getSunderGrailName, mergeSunderItems } from './sunderCharms';
 const { readFile } = promises;
 
@@ -431,8 +431,7 @@ class ItemsStore {
           parsedItems.forEach((item) => {
             let originalName = item.unique_name || item.set_name || '';
             let name = normalizeParsedUniqueOrSetLookupName(originalName, item.type);
-            // Fix double apostrophes in display name
-            let displayName = getSunderGrailName(originalName) || originalName.replace(/'{2,}/g, "'");
+            let displayName = getSunderGrailName(originalName) || normalizeParsedUniqueOrSetDisplayName(originalName, item.type);
             
             if (name.indexOf('rainbowfacet') !== -1) {
               let type = '';

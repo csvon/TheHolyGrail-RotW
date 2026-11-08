@@ -380,6 +380,8 @@ export interface IItem {
     b27_31?: Uint8Array;
     plist_flag?: number;
     v105_pre_quantity_bit?: number;
+    v105_pre_quantity_value?: number;
+    v105_tail_byte?: number;
   };
   rare_name_id: number;
   rare_name_id2: number;

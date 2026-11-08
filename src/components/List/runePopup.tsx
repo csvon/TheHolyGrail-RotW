@@ -15,6 +15,7 @@ import { Rune as TRune, runesMapping, reverseRunesMap } from '../../../electron/
 import { runewordsMappingPl } from '../../../electron/lib/runewordsMapping_pl';
 import { runesMappingPl } from '../../../electron/lib/runesMapping_pl';
 import { getRuneIcon } from './tab';
+import { countItems } from '../../utils/itemQuantity';
 import runeBgImg from '../../../assets/rune.svg';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -149,8 +150,8 @@ export default function RunePopup({
                 {Object.keys(saveFiles).map(saveFile => <Chip
                   key={saveFile}
                   label={
-                    saveFiles[saveFile].length > 1
-                      ? <>{saveFile}<sub>&nbsp;x{saveFiles[saveFile].length}</sub></>
+                    countItems(saveFiles[saveFile]) > 1
+                      ? <>{saveFile}<sub>&nbsp;x{countItems(saveFiles[saveFile])}</sub></>
                       : saveFile
                   }
                   style={{ marginRight: 5 }}

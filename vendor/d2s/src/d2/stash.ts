@@ -25,13 +25,34 @@ export async function read(
     stash.pages = [];
     let pageCount = 0;
     while (reader.offset < reader.bits.length) {
-      pageCount++;
+      const sectorStart = reader.offset;
+      reader.SkipBytes(16);
+      const sectorSize = reader.ReadUInt32();
+      const sectorType = reader.ReadUInt32();
+      reader.offset = sectorStart;
       await readStashHeader(stash, reader);
       const saveVersion = version || parseInt(stash.version);
+      if (saveVersion === 105 && (sectorSize < 68 || sectorStart + sectorSize * 8 > reader.bits.length)) {
+        throw new Error(`Invalid shared stash sector size ${sectorSize} at position ${sectorStart}`);
+      }
+      // v105 also has non-item metadata sectors (type 2), which do not
+      // begin with JM. Follow sector sizes instead of scanning for signatures.
+      if (saveVersion === 105 && sectorType === 2) {
+        reader.offset = sectorStart + sectorSize * 8;
+        continue;
+      }
       if (!constants) {
         constants = getConstantData(saveVersion);
       }
       await readStashPart(stash, reader, saveVersion, constants);
+      pageCount++;
+      if (saveVersion === 105) {
+        if (reader.offset > sectorStart + sectorSize * 8) {
+          throw new Error(`Items exceed shared stash sector at position ${sectorStart}`);
+        }
+        stash.pages[stash.pages.length - 1].type = sectorType;
+        reader.offset = sectorStart + sectorSize * 8;
+      }
     }
     stash.pageCount = pageCount;
   } else {

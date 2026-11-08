@@ -494,7 +494,7 @@ export function TabPanel(props: TabPanelProps) {
                                 <DoneIcon />
                               </ListItemIcon>
                               {player[itemName] &&
-                                Object.keys(player[itemName].inSaves).length > 1 &&
+                                countInSaves(player[itemName]) > 1 &&
                                 <CountLabel className="countLabel">x{countInSaves(player[itemName])}</CountLabel>
                               }
                             </CountLabelContainer>

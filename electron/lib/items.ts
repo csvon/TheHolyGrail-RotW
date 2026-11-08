@@ -22,6 +22,7 @@ import { getSaveGamesFolder } from 'platform-folders';
 import { getEverFound, markManyEverFound } from './everFound';
 import { normalizeParsedUniqueOrSetDisplayName, normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
 import { getSunderGrailName, mergeSunderItems } from './sunderCharms';
+import { getItemQuantity } from '../../src/utils/itemQuantity';
 const { readFile } = promises;
 
 class ItemsStore {
@@ -470,6 +471,7 @@ class ItemsStore {
             ].some((attr) => attr?.name === 'item_indesctructible');
 
             const savedItem: ItemDetails = {
+              quantity: isRune(item) ? item.quantity : undefined,
               ethereal: !!item.ethereal,
               indestructible,
               ilevel: item.level,
@@ -536,7 +538,7 @@ class ItemsStore {
                 results.availableRunes[name].inSaves[saveName] = [savedItem];
               }
             }
-            results.stats[saveName] = (results.stats[saveName] || 0) + 1;
+            results.stats[saveName] = (results.stats[saveName] || 0) + getItemQuantity(savedItem);
           });
         })
         .catch((e) => {
@@ -595,58 +597,6 @@ class ItemsStore {
   parseSave = async (saveName: string, content: Buffer, extension: string): Promise<{ items: d2s.types.IItem[]; version?: number }> => {
     const items: d2s.types.IItem[] = [];
     let parsedVersion: number | undefined;
-    const readUInt32LE = (buffer: Buffer, offset: number): number => {
-      if (offset + 4 > buffer.length) {
-        return 0;
-      }
-      return (
-        buffer[offset] |
-        (buffer[offset + 1] << 8) |
-        (buffer[offset + 2] << 16) |
-        ((buffer[offset + 3] << 24) >>> 0)
-      ) >>> 0;
-    };
-
-    const isModern105D2I = (buffer: Buffer): boolean => {
-      if (buffer.length < 64) {
-        return false;
-      }
-
-      // Modern shared stash starts with 0xAA55AA55 and stores version at +8.
-      if (readUInt32LE(buffer, 0) !== 0xaa55aa55 || readUInt32LE(buffer, 8) !== 105) {
-        return false;
-      }
-
-      // Modern format uses sector-sized blocks, first sector size at +16.
-      const firstSectionSize = readUInt32LE(buffer, 16);
-      return firstSectionSize > 0 && firstSectionSize <= buffer.length;
-    };
-
-    const extractFirstSixModernJMSections = (buffer: Buffer): Buffer => {
-      const sections: Buffer[] = [];
-      let offset = 0;
-
-      while (offset + 68 <= buffer.length && sections.length < 6) {
-        if (readUInt32LE(buffer, offset) !== 0xaa55aa55) {
-          break;
-        }
-
-        const size = readUInt32LE(buffer, offset + 16);
-        if (!size || offset + size > buffer.length) {
-          break;
-        }
-
-        // Item sections start with "JM" at +64 in each sector.
-        if (buffer[offset + 64] === 0x4a && buffer[offset + 65] === 0x4d) {
-          sections.push(buffer.slice(offset, offset + size));
-        }
-
-        offset += size;
-      }
-
-      return sections.length > 0 ? Buffer.concat(sections) : buffer;
-    };
-
     const parseItems = (itemList: d2s.types.IItem[], isEmbed: boolean = false) => {
       itemList.forEach((item) => {
         if (item.unique_name || item.set_name) {
@@ -733,8 +683,7 @@ class ItemsStore {
         });
         break;
       case '.d2i': {
-        const stashContent = isModern105D2I(content) ? extractFirstSixModernJMSections(content) : content;
-        await d2stash.read(stashContent).then(parseStash);
+        await d2stash.read(content).then(parseStash);
         break;
       }
       default:

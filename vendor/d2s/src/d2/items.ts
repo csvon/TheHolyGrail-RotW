@@ -361,9 +361,13 @@ export async function readItem(
         item.current_durability = reader.ReadUInt16(constants.magical_properties[72].sB) - constants.magical_properties[72].sA;
       }
     }
-    // D2R v105 adds a tail bit in this section before stackable quantity.
+    // On the v105 materials page, quest materials can include an optional
+    // nine-bit value here. The same bit on ordinary equipment has no payload.
     if (version === 105) {
       item._unknown_data.v105_pre_quantity_bit = reader.ReadUInt8(1);
+      if (item._unknown_data.v105_pre_quantity_bit && item.alt_position_id === 5 && item.categories?.includes("Quest")) {
+        item._unknown_data.v105_pre_quantity_value = reader.ReadUInt16(9);
+      }
     }
 
     if (constants.stackables[item.type]) {
@@ -426,8 +430,12 @@ export async function readItem(
         }
       }
     } else if (reader.ReadBit()) {
-      // Alternate v105 tail layout with a marker bit + extra byte.
-      reader.SkipBits(8);
+      // The optional v105 tail byte holds the current stack count. Position
+      // fields in the materials page may contain an older count or a slot ID.
+      item._unknown_data.v105_tail_byte = reader.ReadUInt8(8);
+      if (item.simple_item) {
+        item.quantity = item._unknown_data.v105_tail_byte;
+      }
     }
   }
   reader.Align();
@@ -548,6 +556,9 @@ export async function writeItem(
 
     if (version === 105) {
       writer.WriteUInt8(item._unknown_data.v105_pre_quantity_bit || 0, 1);
+      if (item._unknown_data.v105_pre_quantity_value != null) {
+        writer.WriteUInt16(item._unknown_data.v105_pre_quantity_value || 0, 9);
+      }
     }
 
     if (constants.stackables[item.type]) {
@@ -578,7 +589,11 @@ export async function writeItem(
   }
 
   if (version === 105) {
-    writer.WriteBit(0);
+    const tailByte = item.simple_item && item.quantity != null ? item.quantity : item._unknown_data.v105_tail_byte;
+    writer.WriteBit(tailByte != null ? 1 : 0);
+    if (tailByte != null) {
+      writer.WriteUInt8(tailByte, 8);
+    }
   }
 
   writer.Align();

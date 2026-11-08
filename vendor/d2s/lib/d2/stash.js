@@ -14,7 +14,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -67,7 +67,7 @@ var defaultConfig = {
 };
 function read(buffer, constants, version, userConfig) {
     return __awaiter(this, void 0, void 0, function () {
-        var stash, reader, config, firstHeader, pageCount, saveVersion, saveVersion;
+        var stash, reader, config, firstHeader, pageCount, sectorStart, sectorSize, sectorType, saveVersion, saveVersion;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -82,17 +82,38 @@ function read(buffer, constants, version, userConfig) {
                     _a.label = 1;
                 case 1:
                     if (!(reader.offset < reader.bits.length)) return [3 /*break*/, 4];
-                    pageCount++;
+                    sectorStart = reader.offset;
+                    reader.SkipBytes(16);
+                    sectorSize = reader.ReadUInt32();
+                    sectorType = reader.ReadUInt32();
+                    reader.offset = sectorStart;
                     return [4 /*yield*/, readStashHeader(stash, reader)];
                 case 2:
                     _a.sent();
                     saveVersion = version || parseInt(stash.version);
+                    if (saveVersion === 105 && (sectorSize < 68 || sectorStart + sectorSize * 8 > reader.bits.length)) {
+                        throw new Error("Invalid shared stash sector size ".concat(sectorSize, " at position ").concat(sectorStart));
+                    }
+                    // v105 also has non-item metadata sectors (type 2), which do not
+                    // begin with JM. Follow sector sizes instead of scanning for signatures.
+                    if (saveVersion === 105 && sectorType === 2) {
+                        reader.offset = sectorStart + sectorSize * 8;
+                        return [3 /*break*/, 1];
+                    }
                     if (!constants) {
-                        constants = constants_1.getConstantData(saveVersion);
+                        constants = (0, constants_1.getConstantData)(saveVersion);
                     }
                     return [4 /*yield*/, readStashPart(stash, reader, saveVersion, constants)];
                 case 3:
                     _a.sent();
+                    pageCount++;
+                    if (saveVersion === 105) {
+                        if (reader.offset > sectorStart + sectorSize * 8) {
+                            throw new Error("Items exceed shared stash sector at position ".concat(sectorStart));
+                        }
+                        stash.pages[stash.pages.length - 1].type = sectorType;
+                        reader.offset = sectorStart + sectorSize * 8;
+                    }
                     return [3 /*break*/, 1];
                 case 4:
                     stash.pageCount = pageCount;
@@ -102,7 +123,7 @@ function read(buffer, constants, version, userConfig) {
                     _a.sent();
                     saveVersion = version || parseInt(stash.version);
                     if (!constants) {
-                        constants = constants_1.getConstantData(saveVersion);
+                        constants = (0, constants_1.getConstantData)(saveVersion);
                     }
                     return [4 /*yield*/, readStashPages(stash, reader, saveVersion, constants)];
                 case 7:
@@ -134,7 +155,7 @@ function readStashHeader(stash, reader) {
                 case 0x4d545343: // CSTM
                     stash.version = reader.ReadString(2);
                     if (stash.version !== "01" && stash.version !== "02") {
-                        throw new Error("unkown stash version " + stash.version + " at position " + (reader.offset - 2 * 8));
+                        throw new Error("unkown stash version ".concat(stash.version, " at position ").concat(reader.offset - 2 * 8));
                     }
                     stash.type = header === 0x535353 ? types.EStashType.shared : types.EStashType.private;
                     if (stash.type === types.EStashType.shared && stash.version == "02") {
@@ -148,7 +169,7 @@ function readStashHeader(stash, reader) {
                     break;
                 default:
                     debugger;
-                    throw new Error("shared stash header 'SSS' / 0xAA55AA55 / private stash header 'CSTM' not found at position " + (reader.offset - 3 * 8));
+                    throw new Error("shared stash header 'SSS' / 0xAA55AA55 / private stash header 'CSTM' not found at position ".concat(reader.offset - 3 * 8));
             }
             return [2 /*return*/];
         });
@@ -190,7 +211,7 @@ function readStashPage(stash, reader, version, constants) {
                     };
                     header = reader.ReadString(2);
                     if (header !== "ST") {
-                        throw new Error("can not read stash page header ST at position " + (reader.offset - 2 * 8));
+                        throw new Error("can not read stash page header ST at position ".concat(reader.offset - 2 * 8));
                     }
                     page.type = reader.ReadUInt32();
                     page.name = reader.ReadNullTerminatedString();
@@ -198,7 +219,7 @@ function readStashPage(stash, reader, version, constants) {
                     return [4 /*yield*/, items.readItems(reader, version, constants, defaultConfig)];
                 case 1:
                     _a.items = _b.sent();
-                    attribute_enhancer_1.enhanceItems(page.items, constants, 1);
+                    (0, attribute_enhancer_1.enhanceItems)(page.items, constants, 1);
                     stash.pages.push(page);
                     return [2 /*return*/];
             }
@@ -220,7 +241,7 @@ function readStashPart(stash, reader, version, constants) {
                     return [4 /*yield*/, items.readItems(reader, version, constants, defaultConfig)];
                 case 1:
                     _a.items = _b.sent();
-                    attribute_enhancer_1.enhanceItems(page.items, constants, 1);
+                    (0, attribute_enhancer_1.enhanceItems)(page.items, constants, 1);
                     stash.pages.push(page);
                     return [2 /*return*/];
             }
@@ -236,7 +257,7 @@ function write(data, constants, version, userConfig) {
                     config = Object.assign(defaultConfig, userConfig);
                     writer = new bitwriter_1.BitWriter();
                     if (!constants) {
-                        constants = constants_1.getConstantData(version);
+                        constants = (0, constants_1.getConstantData)(version);
                     }
                     if (!(version > 0x61)) return [3 /*break*/, 5];
                     _i = 0, _a = data.pages;

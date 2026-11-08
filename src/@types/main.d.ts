@@ -23,6 +23,7 @@ export type Item = {
 }
 
 export type ItemDetails = {
+  quantity?: number,
   ethereal: boolean,
   indestructible?: boolean,
   ilevel: number | null,

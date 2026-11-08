@@ -1,4 +1,5 @@
 import { IItem } from '@dschu012/d2s/lib/d2/types';
+import { countItems } from './itemQuantity';
 import { IEthGrailData, IEthUniqueArmors, IEthUniqueOther, IEthUniqueWeapons } from 'd2-holy-grail/client/src/common/definitions/union/IEthGrailData';
 import { ISetItems, IUniqueArmors, IUniqueOther, IUniqueWeapons } from 'd2-holy-grail/client/src/common/definitions/union/IHolyGrailData';
 import { runesSeed, runewordsSeed } from '../../electron/lib/holyGrailSeedData';
@@ -303,7 +304,7 @@ export const computeStats = (
 export const countInSaves = (item: Item) => {
   if (!item.inSaves) return 0;
   return Object.values(item.inSaves).reduce(
-    (acc, itemsInSave) => acc + itemsInSave.length,
+    (acc, itemsInSave) => acc + countItems(itemsInSave),
     0
   );
 }
@@ -311,7 +312,7 @@ export const countInSaves = (item: Item) => {
 export const countUnusedInSaves = (item: Item) => {
   if (!item.inSaves) return 0;
   return Object.values(item.inSaves).reduce(
-    (acc, itemsInSave) => acc + itemsInSave.filter((i) => !i.socketed).length,
+    (acc, itemsInSave) => acc + countItems(itemsInSave.filter((i) => !i.socketed)),
     0
   );
 }
@@ -344,7 +345,7 @@ const getRuneHolders = (targetRune: string, availableRunes: AvailableRunes): Run
     if (!runeHolders[saveName]) {
       runeHolders[saveName] = 0;
     }
-    runeHolders[saveName] += itemsInSave.length;
+    runeHolders[saveName] += countItems(itemsInSave.filter((i) => !i.socketed));
   });
   runeHolders = Object.fromEntries(
     Object.entries(runeHolders).sort(([,a],[,b]) => b-a)

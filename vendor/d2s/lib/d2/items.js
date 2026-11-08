@@ -144,7 +144,7 @@ function readMercItems(char, reader, constants, config) {
                         if ((char === null || char === void 0 ? void 0 : char.header.level) === 1) {
                             return [2 /*return*/];
                         }
-                        throw new Error("Mercenary header 'jf' not found at position " + (reader.offset - 2 * 8));
+                        throw new Error("Mercenary header 'jf' not found at position ".concat(reader.offset - 2 * 8));
                     }
                     if (!(char.header.merc_id && parseInt(char.header.merc_id, 16) !== 0)) return [3 /*break*/, 2];
                     _a = char;
@@ -191,7 +191,7 @@ function readGolemItems(char, reader, constants, config) {
                         if ((char === null || char === void 0 ? void 0 : char.header.level) === 1) {
                             return [2 /*return*/];
                         }
-                        throw new Error("Golem header 'kf' not found at position " + (reader.offset - 2 * 8));
+                        throw new Error("Golem header 'kf' not found at position ".concat(reader.offset - 2 * 8));
                     }
                     has_golem = reader.ReadUInt8();
                     if (!(has_golem === 1)) return [3 /*break*/, 2];
@@ -244,7 +244,7 @@ function readCorpseItems(char, reader, constants, config) {
                             char.is_dead = 0;
                             return [2 /*return*/];
                         }
-                        throw new Error("Corpse header 'JM' not found at position " + (reader.offset - 2 * 8));
+                        throw new Error("Corpse header 'JM' not found at position ".concat(reader.offset - 2 * 8));
                     }
                     char.is_dead = reader.ReadUInt16(); //0x0002 [corpse count]
                     i = 0;
@@ -304,7 +304,7 @@ function readItems(reader, version, constants, config, char) {
                         if ((char === null || char === void 0 ? void 0 : char.header.level) === 1) {
                             return [2 /*return*/, []]; // TODO: return starter items based on class
                         }
-                        throw new Error("Item list header 'JM' not found at position " + (reader.offset - 2 * 8));
+                        throw new Error("Item list header 'JM' not found at position ".concat(reader.offset - 2 * 8));
                     }
                     count = reader.ReadUInt16();
                     i = 0;
@@ -404,16 +404,16 @@ function writeItems(items, version, constants, config) {
 }
 exports.writeItems = writeItems;
 function readItem(reader, version, originalConstants, config, parent) {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function () {
-        var header, constants, item, i, prefix, arr, i, plist_flag, magic_attributes, hasTransientPostIdBits, padBits, transientBits, probeOffset, i, _c, _d;
-        return __generator(this, function (_e) {
-            switch (_e.label) {
+        var header, constants, item, i, prefix, arr, i, plist_flag, magic_attributes, hasTransientPostIdBits, padBits, transientBits, probeOffset, i, _d, _e;
+        return __generator(this, function (_f) {
+            switch (_f.label) {
                 case 0:
                     if (version <= 0x60) {
                         header = reader.ReadString(2);
                         if (header !== "JM") {
-                            throw new Error("Item header 'JM' not found at position " + (reader.offset - 2 * 8));
+                            throw new Error("Item header 'JM' not found at position ".concat(reader.offset - 2 * 8));
                         }
                     }
                     constants = originalConstants;
@@ -516,9 +516,13 @@ function readItem(reader, version, originalConstants, config, parent) {
                                 item.current_durability = reader.ReadUInt16(constants.magical_properties[72].sB) - constants.magical_properties[72].sA;
                             }
                         }
-                        // D2R v105 adds a tail bit in this section before stackable quantity.
+                        // On the v105 materials page, quest materials can include an optional
+                        // nine-bit value here. The same bit on ordinary equipment has no payload.
                         if (version === 105) {
                             item._unknown_data.v105_pre_quantity_bit = reader.ReadUInt8(1);
+                            if (item._unknown_data.v105_pre_quantity_bit && item.alt_position_id === 5 && ((_a = item.categories) === null || _a === void 0 ? void 0 : _a.includes("Quest"))) {
+                                item._unknown_data.v105_pre_quantity_value = reader.ReadUInt16(9);
+                            }
                         }
                         if (constants.stackables[item.type]) {
                             item.quantity = reader.ReadUInt16(9);
@@ -555,7 +559,7 @@ function readItem(reader, version, originalConstants, config, parent) {
                         }
                     }
                     if (version === 105) {
-                        hasTransientPostIdBits = !!((_b = (_a = item._unknown_data) === null || _a === void 0 ? void 0 : _a.b27_31) === null || _b === void 0 ? void 0 : _b[1]);
+                        hasTransientPostIdBits = !!((_c = (_b = item._unknown_data) === null || _b === void 0 ? void 0 : _b.b27_31) === null || _c === void 0 ? void 0 : _c[1]);
                         if (hasTransientPostIdBits) {
                             padBits = (8 - (reader.offset & 7)) & 7;
                             transientBits = padBits <= 3 ? 56 : 48;
@@ -571,22 +575,26 @@ function readItem(reader, version, originalConstants, config, parent) {
                             }
                         }
                         else if (reader.ReadBit()) {
-                            // Alternate v105 tail layout with a marker bit + extra byte.
-                            reader.SkipBits(8);
+                            // The optional v105 tail byte holds the current stack count. Position
+                            // fields in the materials page may contain an older count or a slot ID.
+                            item._unknown_data.v105_tail_byte = reader.ReadUInt8(8);
+                            if (item.simple_item) {
+                                item.quantity = item._unknown_data.v105_tail_byte;
+                            }
                         }
                     }
                     reader.Align();
                     if (!(item.nr_of_items_in_sockets > 0 && item.simple_item === 0)) return [3 /*break*/, 4];
                     item.socketed_items = [];
                     i = 0;
-                    _e.label = 1;
+                    _f.label = 1;
                 case 1:
                     if (!(i < item.nr_of_items_in_sockets)) return [3 /*break*/, 4];
-                    _d = (_c = item.socketed_items).push;
+                    _e = (_d = item.socketed_items).push;
                     return [4 /*yield*/, readItem(reader, version, constants, config, item)];
                 case 2:
-                    _d.apply(_c, [_e.sent()]);
-                    _e.label = 3;
+                    _e.apply(_d, [_f.sent()]);
+                    _f.label = 3;
                 case 3:
                     i++;
                     return [3 /*break*/, 1];
@@ -601,7 +609,7 @@ exports.readItem = readItem;
 function writeItem(item, version, constants, config) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var writer, i, magical_name_id, runeword_id, name_1, i, set_attribute_count, plist_flag, i, i, _b, _c;
+        var writer, i, magical_name_id, runeword_id, name_1, i, set_attribute_count, plist_flag, i, tailByte, i, _b, _c;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -700,6 +708,9 @@ function writeItem(item, version, constants, config) {
                         }
                         if (version === 105) {
                             writer.WriteUInt8(item._unknown_data.v105_pre_quantity_bit || 0, 1);
+                            if (item._unknown_data.v105_pre_quantity_value != null) {
+                                writer.WriteUInt16(item._unknown_data.v105_pre_quantity_value || 0, 9);
+                            }
                         }
                         if (constants.stackables[item.type]) {
                             writer.WriteUInt16(item.quantity, 9);
@@ -723,7 +734,11 @@ function writeItem(item, version, constants, config) {
                         }
                     }
                     if (version === 105) {
-                        writer.WriteBit(0);
+                        tailByte = item.simple_item && item.quantity != null ? item.quantity : item._unknown_data.v105_tail_byte;
+                        writer.WriteBit(tailByte != null ? 1 : 0);
+                        if (tailByte != null) {
+                            writer.WriteUInt8(tailByte, 8);
+                        }
                     }
                     writer.Align();
                     if (!(item.nr_of_items_in_sockets > 0 && item.simple_item === 0)) return [3 /*break*/, 4];
@@ -915,13 +930,13 @@ function _readMagicProperties(reader, constants) {
     while (id != 0x1ff) {
         var values = [];
         if (id > constants.magical_properties.length) {
-            throw new Error("Invalid Stat Id: " + id + " at position " + (reader.offset - 9));
+            throw new Error("Invalid Stat Id: ".concat(id, " at position ").concat(reader.offset - 9));
         }
         var num_of_properties = constants.magical_properties[id].np || 1;
         for (var i = 0; i < num_of_properties; i++) {
             var prop = constants.magical_properties[id + i];
             if (prop == null) {
-                throw new Error("Cannot find Magical Property for id: " + id + " at position " + reader.offset);
+                throw new Error("Cannot find Magical Property for id: ".concat(id, " at position ").concat(reader.offset));
             }
             if (prop.sP) {
                 var param = reader.ReadUInt16(prop.sP);
@@ -949,7 +964,7 @@ function _readMagicProperties(reader, constants) {
                 values.push(param);
             }
             if (!prop.sB) {
-                throw new Error("Save Bits is undefined for stat: " + id + ":" + prop.s + " at position " + reader.offset);
+                throw new Error("Save Bits is undefined for stat: ".concat(id, ":").concat(prop.s, " at position ").concat(reader.offset));
             }
             var v = reader.ReadUInt16(prop.sB);
             if (prop.sA) {
@@ -985,7 +1000,7 @@ function _writeMagicProperties(writer, properties, constants) {
             for (var j = 0; j < num_of_properties; j++) {
                 var prop = constants.magical_properties[property.id + j];
                 if (prop == null) {
-                    throw new Error("Cannot find Magical Property for id: " + property.id);
+                    throw new Error("Cannot find Magical Property for id: ".concat(property.id));
                 }
                 if (prop.sP) {
                     var param = property.values[valueIdx++];
@@ -1022,7 +1037,7 @@ function _writeMagicProperties(writer, properties, constants) {
                         break;
                 }
                 if (!prop.sB) {
-                    throw new Error("Save Bits is undefined for stat: " + property.id + ":" + prop.s);
+                    throw new Error("Save Bits is undefined for stat: ".concat(property.id, ":").concat(prop.s));
                 }
                 writer.WriteUInt32(v, prop.sB);
             }

@@ -46,7 +46,6 @@ Stack: **Electron + React + TypeScript**
 
 ## Known Limitations
 
-- Shared stash runes tab currently tracks rune **presence**, not stack quantity.
 - Web Sync is currently disabled in this build.
 
 ## Quick Start (Users)

@@ -277,7 +277,9 @@ function _enhanceAttributeDescription(
 
   if (config?.sortProperties) {
     //sort using sort order from game.
-    magic_attributes.sort((a, b) => constants.magical_properties[b.id].so - constants.magical_properties[a.id].so);
+    // Hidden stats (for example the upgrade level penalty) have no display
+    // priority. A NaN comparison can leave visible properties out of order.
+    magic_attributes.sort((a, b) => (constants.magical_properties[b.id].so ?? 0) - (constants.magical_properties[a.id].so ?? 0));
   }
 
   for (let i = magic_attributes.length - 1; i >= 1; i--) {

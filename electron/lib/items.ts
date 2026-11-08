@@ -23,6 +23,7 @@ import { getEverFound, markManyEverFound } from './everFound';
 import { normalizeParsedUniqueOrSetDisplayName, normalizeParsedUniqueOrSetLookupName } from './itemNameNormalization';
 import { getSunderGrailName, mergeSunderItems } from './sunderCharms';
 import { getItemQuantity } from '../../src/utils/itemQuantity';
+import { getItemRequiredLevel } from './itemRequiredLevel';
 const { readFile } = promises;
 
 class ItemsStore {
@@ -491,9 +492,7 @@ class ItemsStore {
               maxDurability: item.max_durability,
               requiredStrength: item.reqstr,
               requiredDexterity: item.reqdex,
-              requiredLevel: item.magic_attributes
-                ?.find((attr) => attr && attr.name === 'item_levelreq')
-                ?.values?.[0],
+              requiredLevel: getItemRequiredLevel(item),
               totalSockets: item.total_nr_of_sockets,
               baseDamage: item.base_damage,
               displayedMagicAttributes: Array.from(new Set(

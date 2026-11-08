@@ -377,7 +377,8 @@ function _enhanceAttributeDescription(_magic_attributes, constants, level, confi
     }
     if (config === null || config === void 0 ? void 0 : config.sortProperties) {
         //sort using sort order from game.
-        magic_attributes.sort(function (a, b) { return constants.magical_properties[b.id].so - constants.magical_properties[a.id].so; });
+        // Hidden stats have no display priority; keep comparisons numeric.
+        magic_attributes.sort(function (a, b) { return (constants.magical_properties[b.id].so || 0) - (constants.magical_properties[a.id].so || 0); });
     }
     for (var i = magic_attributes.length - 1; i >= 1; i--) {
         for (var j = i - 1; j >= 0; j--) {

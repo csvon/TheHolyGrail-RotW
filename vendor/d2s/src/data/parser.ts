@@ -233,12 +233,14 @@ function _readMagicNames(tsv: any, strings: any): any[] {
   const arr = [] as any[];
   const cName = tsv.header.indexOf("Name");
   const cTransformcolor = tsv.header.indexOf("transformcolor");
+  const cLevelReq = tsv.header.indexOf("levelreq");
   let id = 1;
   for (let i = 1; i < tsv.lines.length; i++) {
     const name = tsv.lines[i][cName];
     if (name != "Expansion") {
       const o = {} as any;
       o.n = strings[name];
+      if (tsv.lines[i][cLevelReq]) o.rl = +tsv.lines[i][cLevelReq];
       if (tsv.lines[i][cTransformcolor]) o.tc = tsv.lines[i][cTransformcolor];
       arr[id] = o;
       id++;
@@ -366,6 +368,7 @@ function _readItems(tsv: any, itemtypes: any, strings: any): any[] {
   const cMaxmisdam = tsv.header.indexOf("maxmisdam");
   const cReqstr = tsv.header.indexOf("reqstr");
   const cReqdex = tsv.header.indexOf("reqdex");
+  const cLevelReq = tsv.header.indexOf("levelreq");
   const cHasinv = tsv.header.indexOf("hasinv");
   const cGemapplytype = tsv.header.indexOf("gemapplytype");
   const cInvfile = tsv.header.indexOf("invfile");
@@ -406,6 +409,7 @@ function _readItems(tsv: any, itemtypes: any, strings: any): any[] {
       if (tsv.lines[i][cMaxmisdam] && +tsv.lines[i][cMaxmisdam] > 0) item.maxmd = +tsv.lines[i][cMaxmisdam];
       if (tsv.lines[i][cReqstr]) item.rs = +tsv.lines[i][cReqstr];
       if (tsv.lines[i][cReqdex]) item.rd = +tsv.lines[i][cReqdex];
+      if (tsv.lines[i][cLevelReq]) item.rl = +tsv.lines[i][cLevelReq];
       if (tsv.lines[i][cHasinv]) item.hi = +tsv.lines[i][cHasinv];
       if (tsv.lines[i][cGemapplytype]) item.gt = +tsv.lines[i][cGemapplytype];
       if (tsv.lines[i][cInvfile]) item.i = tsv.lines[i][cInvfile];
@@ -472,6 +476,7 @@ function _readSetOrUnqItems(tsv: any, strings: any): any[] {
   const arr = [] as any[];
   const cIndex = tsv.header.indexOf("index");
   const cInvfile = tsv.header.indexOf("invfile");
+  const cLevelReq = tsv.header.indexOf("lvl req");
   let cCode = tsv.header.indexOf("code");
   if (cCode < 0) cCode = tsv.header.indexOf("item");
   const cInvtransform = tsv.header.indexOf("invtransform");
@@ -481,6 +486,7 @@ function _readSetOrUnqItems(tsv: any, strings: any): any[] {
     if (index && index != "Expansion") {
       const o = {} as any;
       o.n = strings[tsv.lines[i][cIndex]];
+      if (tsv.lines[i][cLevelReq]) o.rl = +tsv.lines[i][cLevelReq];
       if (tsv.lines[i][cInvfile]) o.i = tsv.lines[i][cInvfile];
       if (tsv.lines[i][cCode]) o.c = tsv.lines[i][cCode];
       if (tsv.lines[i][cInvtransform]) o.tc = tsv.lines[i][cInvtransform];

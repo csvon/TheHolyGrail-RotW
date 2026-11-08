@@ -16,6 +16,7 @@ const { BitReader } = require('../vendor/d2s/lib/binary/bitreader');
 const constants = require('../vendor/d2s/lib/data/versions/105_constant_data').constants;
 d2s.setConstantData(105, constants);
 const { countItems, getItemQuantity } = require('../src/utils/itemQuantity.ts');
+const { getItemRequiredLevel } = require('../electron/lib/itemRequiredLevel.ts');
 require('../electron/lib/holyGrailSeedData.ts');
 const objects = require('../src/utils/objects.ts');
 const { GameMode, GrailType } = require('../src/@types/main.d.ts');
@@ -35,7 +36,7 @@ const compiled = ts.transpileModule(`class TestStore { ${methods.map(m => m.getT
 }).outputText;
 let selectedFile;
 const dependencies = {
-  d2s, d2stash, runesMapping, ...objects, ...normalization, getSunderGrailName, getItemQuantity,
+  d2s, d2stash, runesMapping, ...objects, ...normalization, getSunderGrailName, getItemQuantity, getItemRequiredLevel,
   GameMode, GrailType,
   settingsStore: { getSettings: () => ({ gameMode: GameMode.Softcore, grailType: GrailType.Both }) },
   readFile: fs.promises.readFile, join: path.join, basename: path.basename, extname: path.extname,

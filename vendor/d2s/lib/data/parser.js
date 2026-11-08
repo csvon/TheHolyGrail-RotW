@@ -247,12 +247,14 @@ function _readMagicNames(tsv, strings) {
     var arr = [];
     var cName = tsv.header.indexOf("Name");
     var cTransformcolor = tsv.header.indexOf("transformcolor");
+    var cLevelReq = tsv.header.indexOf("levelreq");
     var id = 1;
     for (var i = 1; i < tsv.lines.length; i++) {
         var name_2 = tsv.lines[i][cName];
         if (name_2 != "Expansion") {
             var o = {};
             o.n = strings[name_2];
+            if (tsv.lines[i][cLevelReq]) o.rl = +tsv.lines[i][cLevelReq];
             if (tsv.lines[i][cTransformcolor])
                 o.tc = tsv.lines[i][cTransformcolor];
             arr[id] = o;
@@ -378,6 +380,7 @@ function _readItems(tsv, itemtypes, strings) {
     var cMaxmisdam = tsv.header.indexOf("maxmisdam");
     var cReqstr = tsv.header.indexOf("reqstr");
     var cReqdex = tsv.header.indexOf("reqdex");
+    var cLevelReq = tsv.header.indexOf("levelreq");
     var cHasinv = tsv.header.indexOf("hasinv");
     var cGemapplytype = tsv.header.indexOf("gemapplytype");
     var cInvfile = tsv.header.indexOf("invfile");
@@ -429,6 +432,7 @@ function _readItems(tsv, itemtypes, strings) {
                 item.rs = +tsv.lines[i][cReqstr];
             if (tsv.lines[i][cReqdex])
                 item.rd = +tsv.lines[i][cReqdex];
+            if (tsv.lines[i][cLevelReq]) item.rl = +tsv.lines[i][cLevelReq];
             if (tsv.lines[i][cHasinv])
                 item.hi = +tsv.lines[i][cHasinv];
             if (tsv.lines[i][cGemapplytype])
@@ -506,6 +510,7 @@ function _readSetOrUnqItems(tsv, strings) {
     var arr = [];
     var cIndex = tsv.header.indexOf("index");
     var cInvfile = tsv.header.indexOf("invfile");
+    var cLevelReq = tsv.header.indexOf("lvl req");
     var cCode = tsv.header.indexOf("code");
     if (cCode < 0)
         cCode = tsv.header.indexOf("item");
@@ -516,6 +521,7 @@ function _readSetOrUnqItems(tsv, strings) {
         if (index && index != "Expansion") {
             var o = {};
             o.n = strings[tsv.lines[i][cIndex]];
+            if (tsv.lines[i][cLevelReq]) o.rl = +tsv.lines[i][cLevelReq];
             if (tsv.lines[i][cInvfile])
                 o.i = tsv.lines[i][cInvfile];
             if (tsv.lines[i][cCode])

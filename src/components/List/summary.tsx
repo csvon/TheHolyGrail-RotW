@@ -20,9 +20,10 @@ type ListProps = {
   appSettings: Settings,
   holyGrailStats: HolyGrailStats,
   itemNotes: ItemNotes,
+  everFound: Record<string, boolean>,
 }
 
-export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemNotes }: ListProps) {
+export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemNotes, everFound }: ListProps) {
   const { t } = useTranslation();
 
   if (fileReaderResponse === null) {
@@ -161,6 +162,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                 <TabPanel
                   value={TabState.Statistics}
                   index={TabState.Statistics}
+                  everFound={everFound}
                   player={items}
                   ethPlayer={ethItems}
                   stats={stats}
@@ -173,6 +175,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                 <TabPanel
                   value={TabState.UniqueArmor}
                   index={TabState.UniqueArmor}
+                  everFound={everFound}
                   ethItems={ethGrailSeedData.uniques.armor}
                   items={holyGrailSeedData.uniques.armor}
                   ethPlayer={ethItems}
@@ -185,6 +188,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                 <TabPanel
                   value={TabState.UniqueWeapons}
                   index={TabState.UniqueWeapons}
+                  everFound={everFound}
                   ethItems={ethGrailSeedData.uniques.weapons}
                   items={holyGrailSeedData.uniques.weapons}
                   player={items}
@@ -197,6 +201,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                 <TabPanel
                   value={TabState.UniqueOther}
                   index={TabState.UniqueOther}
+                  everFound={everFound}
                   ethItems={ethGrailSeedData.uniques.other}
                   items={holyGrailSeedData.uniques.other}
                   player={items}
@@ -211,6 +216,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                     <TabPanel
                       value={TabState.Sets}
                       index={TabState.Sets}
+                      everFound={everFound}
                       sets={holyGrailSeedData.sets}
                       player={items}
                       ethPlayer={{}}
@@ -222,6 +228,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                     <TabPanel
                       value={TabState.Runes}
                       index={TabState.Runes}
+                      everFound={everFound}
                       runes={holyGrailSeedData.runes}
                       player={items}
                       ethPlayer={{}}
@@ -233,6 +240,7 @@ export function Summary({ fileReaderResponse, appSettings, holyGrailStats, itemN
                     <TabPanel
                       value={TabState.Runewords}
                       index={TabState.Runewords}
+                      everFound={everFound}
                       runewords={holyGrailSeedData.runewords}
                       runes={holyGrailSeedData.runes}
                       player={items}

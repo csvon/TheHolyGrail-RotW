@@ -20,7 +20,9 @@ import { runesMapping } from '../../../electron/lib/runesMapping';
 import { runewordsMapping } from '../../../electron/lib/runewordsMapping';
 import RunePopup from './runePopup';
 import ManualControl from './manualControl';
-import { Calculate, InfoOutlined, Search } from '@mui/icons-material';
+import Calculate from '@mui/icons-material/Calculate';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
+import Search from '@mui/icons-material/Search';
 
 type TabPanelProps = {
   index: number,
@@ -41,6 +43,7 @@ type TabPanelProps = {
   holyGrailStats: HolyGrailStats,
   itemNotes?: ItemNotes,
   availableRunes?: AvailableRunes,
+  everFound: Record<string, boolean>,
 };
 
 export const getRuneIcon = (runeType: string): string => {
@@ -95,12 +98,9 @@ const getCacheKey = (tabIndex: TabState, ethereal: boolean, settings: Settings):
 
 export function TabPanel(props: TabPanelProps) {
   const { value, index, items, ethItems, sets, runes, runewords, player, ethPlayer, stats, unmappedItems, search,
-    noFileSummary, noAnimation, appSettings, holyGrailStats, itemNotes = {}, availableRunes = {} } = props;
+    noFileSummary, noAnimation, appSettings, holyGrailStats, itemNotes = {}, availableRunes = {}, everFound } = props;
   const { gameMode, grailType } = appSettings;
   const { t } = useTranslation();
-
-  // Load durable history from main
-  const everFound = window.Main.getEverFound() as Record<string, boolean>;
 
   // Helper: does this item appear as "found" in the UI?
   const isFoundView = (itemName: string) => {
@@ -190,7 +190,7 @@ export function TabPanel(props: TabPanelProps) {
         return out;
       }
       // @ts-ignore
-      itemList = filterWithOnlyMissing(runewords || runes || itemList);
+      itemList = filterWithOnlyMissing(itemList);
     }
   }
 

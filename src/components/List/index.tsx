@@ -1,21 +1,20 @@
-import { ChangeEvent, LegacyRef, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, LegacyRef, memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import { Container, Image, Logo, ButtonPanel, MissingOnlySwitch } from './styles';
 import { TabPanel } from './tab';
 import SettingsPanel from '../Settings'
 import { Trans, useTranslation } from 'react-i18next';
-import { FileReaderResponse, GrailType, ItemNotes, Settings, ItemsInSaves } from '../../@types/main.d';
+import { FileReaderResponse, GrailType, HolyGrailSeed, HolyGrailStats, ItemNotes, Settings, ItemsInSaves } from '../../@types/main.d';
+import { IEthGrailData } from 'd2-holy-grail/client/src/common/definitions/union/IEthGrailData';
 import { Search } from '../Search';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
-import DoneIcon from '@mui/icons-material/Done';
 
 import { getHolyGrailSeedData, runesSeed, runewordsSeed } from '../../../electron/lib/holyGrailSeedData';
 
 import dingSound from '../../../assets/ding.mp3';
 import cc from '../../../assets/cc.svg';
 import logo from '../../../assets/logo.svg';
-import twitchIcon from '../../../assets/twitch-icon.svg';
 import { Summary } from './summary';
 import { Language } from './language';
 import { computeStats } from '../../utils/objects';
@@ -49,6 +48,8 @@ type ListProps = {
 export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, playSound }: ListProps) {
   const [tab, setTab] = useState(TabState.Statistics);
   const [search, setSearch] = useState<string>('');
+  const deferredSearch = useDeferredValue(search);
+  const [submitRequested, setSubmitRequested] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0); // bump when everFound is cleared
   const { t } = useTranslation();
 
@@ -57,19 +58,19 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
   }
 
   const dingPlayer: LegacyRef<HTMLAudioElement> = useRef<HTMLAudioElement>(null);
-  const localPlaySound = () => {
+  const localPlaySound = useCallback(() => {
     if (!appSettings.enableSounds) {
       return;
     }
     dingPlayer.current?.load();
     dingPlayer.current?.play();
-  };
+  }, [appSettings.enableSounds]);
 
   // Use the passed playSound function if available, otherwise use local fallback
   const finalPlaySound = playSound || localPlaySound;
 
 
-  const { items, ethItems, stats, availableRunes } = fileReaderResponse;
+  const { items, ethItems } = fileReaderResponse;
 
   // When main broadcasts that history/recent-finds were cleared, refresh views/memos.
   useEffect(() => {
@@ -82,7 +83,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
   // Persisted history map: Record<string, boolean>, with optional ETH entries using '#eth' suffix.
   const everFound = useMemo(
     () => (window as any)?.Main?.getEverFound ? (window as any).Main.getEverFound() as Record<string, boolean> : {},
-    [appSettings.persistFoundOnDrop, historyVersion]
+    [fileReaderResponse, appSettings.persistFoundOnDrop, historyVersion]
   );
 
   // Merge history into normal items so totals include "previously found" when enabled.
@@ -141,9 +142,6 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
       appSettings.grailType,
     ]
   );
-  const runesData = holyGrailSeedData.runes || runesSeed;
-  const runewordsData = holyGrailSeedData.runewords || runewordsSeed;
-
   // Feed augmented maps so totals include "previously found" when enabled
   const holyGrailStats = useMemo(
     () => computeStats(itemsForStats, ethItemsForStats, holyGrailSeedData, ethGrailSeedData, appSettings, finalPlaySound),
@@ -162,17 +160,20 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
     ]
   );
 
-  const handleOnlyMissing = (event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    window.Main.saveSetting(settingsKeys.onlyMissing, checked);
-  }
-
   const handleGoHome = () => {
+    setSubmitRequested(false);
     setSearch('');
     setTab(TabState.Statistics);
   }
 
   const handleSearchSubmit = () => {
-    requestAnimationFrame(() => {
+    setSubmitRequested(true);
+  };
+
+  useEffect(() => {
+    if (!submitRequested || search !== deferredSearch) return;
+    const frame = requestAnimationFrame(() => {
+      setSubmitRequested(false);
       const visibleResultEntries = Array.from(
         document.querySelectorAll<HTMLElement>('[data-search-result-entry="true"]')
       ).filter((entry) => entry.getClientRects().length > 0);
@@ -190,7 +191,8 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
 
       result.click();
     });
-  };
+    return () => cancelAnimationFrame(frame);
+  }, [submitRequested, search, deferredSearch]);
 
   return (
     <Container>
@@ -216,6 +218,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
             search={search}
             searchShortcut={appSettings.searchShortcut}
             onSearch={(text: string) => {
+              setSubmitRequested(false);
               setSearch(text);
             }}
             onSubmit={handleSearchSubmit}
@@ -225,11 +228,61 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
             appSettings={appSettings}
             holyGrailStats={holyGrailStats}
             itemNotes={itemNotes}
+            everFound={everFound}
           />
           <Language />
           <SettingsPanel appSettings={appSettings} onSaveSetting={saveSetting} />
         </ButtonPanel>
       </Box>
+      <ListResults
+        tab={tab}
+        onTabChange={setTab}
+        search={deferredSearch}
+        fileReaderResponse={fileReaderResponse}
+        appSettings={appSettings}
+        itemNotes={itemNotes}
+        everFound={everFound}
+        historyVersion={historyVersion}
+        holyGrailStats={holyGrailStats}
+        holyGrailSeedData={holyGrailSeedData}
+        ethGrailSeedData={ethGrailSeedData}
+      />
+      <audio preload='auto' ref={dingPlayer} style={{ display: 'none' }}>
+        <source src={dingSound} type="audio/mpeg" />
+      </audio>
+    </Container>
+  );
+}
+
+type ListResultsProps = {
+  tab: TabState,
+  onTabChange: (tab: TabState) => void,
+  search: string,
+  fileReaderResponse: FileReaderResponse,
+  appSettings: Settings,
+  itemNotes: ItemNotes,
+  everFound: Record<string, boolean>,
+  historyVersion: number,
+  holyGrailStats: HolyGrailStats,
+  holyGrailSeedData: HolyGrailSeed,
+  ethGrailSeedData: IEthGrailData,
+};
+
+// Keep the existing results during urgent input updates. React can interrupt
+// the deferred render between rows when another keystroke arrives.
+const ListResults = memo(function ListResults({
+  tab, onTabChange, search, fileReaderResponse, appSettings, itemNotes,
+  everFound, historyVersion, holyGrailStats, holyGrailSeedData, ethGrailSeedData,
+}: ListResultsProps) {
+  const { t } = useTranslation();
+  const { items, ethItems, stats, availableRunes } = fileReaderResponse;
+  const runesData = holyGrailSeedData.runes || runesSeed;
+  const runewordsData = holyGrailSeedData.runewords || runewordsSeed;
+  const handleOnlyMissing = (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    window.Main.saveSetting(settingsKeys.onlyMissing, checked);
+  };
+
+  return <>
       {tab !== TabState.None && !search.length ?
         <Box
           sx={{
@@ -244,7 +297,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         >
           <Tabs
             value={tab}
-            onChange={(_, value) => { setTab(value); }}
+            onChange={(_, value) => { onTabChange(value); }}
             variant="scrollable"
             scrollButtons="auto"
             sx={{
@@ -304,6 +357,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         key={`stats-${historyVersion}`}
         value={search.length ? TabState.None : tab}
         index={TabState.Statistics}
+        everFound={everFound}
         player={items}
         ethPlayer={ethItems}
         stats={stats}
@@ -316,6 +370,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         key={`ua-${historyVersion}`}
         value={search.length ? TabState.UniqueArmor : tab}
         index={TabState.UniqueArmor}
+        everFound={everFound}
         ethItems={ethGrailSeedData.uniques.armor}
         items={holyGrailSeedData.uniques.armor}
         player={items}
@@ -329,6 +384,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         key={`uw-${historyVersion}`}
         value={search.length ? TabState.UniqueWeapons : tab}
         index={TabState.UniqueWeapons}
+        everFound={everFound}
         ethItems={ethGrailSeedData.uniques.weapons}
         items={holyGrailSeedData.uniques.weapons}
         player={items}
@@ -342,6 +398,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         key={`uo-${historyVersion}`}
         value={search.length ? TabState.UniqueOther : tab}
         index={TabState.UniqueOther}
+        everFound={everFound}
         ethItems={ethGrailSeedData.uniques.other}
         items={holyGrailSeedData.uniques.other}
         player={items}
@@ -357,6 +414,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
             key={`sets-${historyVersion}`}
             value={search.length ? TabState.Sets : tab}
             index={TabState.Sets}
+            everFound={everFound}
             sets={holyGrailSeedData.sets}
             player={items}
             ethPlayer={{}}
@@ -369,6 +427,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
             key={`runes-${historyVersion}`}
             value={search.length ? TabState.Runes : tab}
             index={TabState.Runes}
+            everFound={everFound}
             runes={runesData}
             player={items}
             ethPlayer={{}}
@@ -382,6 +441,7 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
             key={`runewords-${historyVersion}`}
             value={search.length ? TabState.Runewords : tab}
             index={TabState.Runewords}
+            everFound={everFound}
             runewords={runewordsData}
             runes={runesData}
             player={items}
@@ -402,9 +462,5 @@ export function List({ fileReaderResponse, appSettings, itemNotes, saveSetting, 
         &nbsp;
         <a href="https://www.deviantart.com/buckethelm" style={{ color: '#eee' }}>BucketHelm</a>
       </div>}
-      <audio preload='auto' ref={dingPlayer} style={{ display: 'none' }}>
-        <source src={dingSound} type="audio/mpeg" />
-      </audio>
-    </Container>
-  );
-}
+  </>;
+});

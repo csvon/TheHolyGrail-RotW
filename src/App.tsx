@@ -103,7 +103,7 @@ export function App() {
 
   const saveSetting = <K extends keyof Settings>(setting: K, value: Settings[K]) => {
     window.Main.saveSetting(setting, value);
-    appSettings.current[setting] = value;
+    appSettings.current = { ...appSettings.current, [setting]: value };
     setSettingsVersion((version) => version + 1);
   }
 

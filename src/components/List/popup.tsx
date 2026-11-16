@@ -329,6 +329,7 @@ export default function Popup({
         maxWidth="md"
         fullWidth
       >
+        {open && !!drop && <>
         <DialogTitle sx={{ m: 0, p: 2 }}>
           <PopupTitle>{fullItemName}</PopupTitle>
           <IconButton
@@ -456,8 +457,10 @@ export default function Popup({
             {drop}
           </div>
         </DialogContent>
+        </>}
       </BootstrapDialog>
       <Dialog open={noteOpen} fullWidth onClose={() => setNoteOpen(false)}>
+        {noteOpen && <>
         <DialogTitle>{fullItemName}</DialogTitle>
         <DialogContent>
           <TextField
@@ -475,8 +478,10 @@ export default function Popup({
           <Button onClick={() => setNoteOpen(false)}><Trans>Cancel</Trans></Button>
           <Button onClick={handleNoteChanged}><Trans>Save</Trans></Button>
         </DialogActions>
+        </>}
       </Dialog>
       <Dialog open={itemDetailsOpen} fullWidth maxWidth="xs" onClose={() => setItemDetailsOpen(false)}>
+        {itemDetailsOpen && <>
         <DialogTitle sx={{ pb: 1 }}>
           <div style={{ textAlign: 'center', color: colors.name, lineHeight: 1.2 }}>{itemNameForDetails}</div>
           {selectedItem?.typeName && (
@@ -585,6 +590,7 @@ export default function Popup({
             </div>
           </DialogActions>
         )}
+        </>}
       </Dialog>
     </>  
   );

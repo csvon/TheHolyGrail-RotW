@@ -27,6 +27,15 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(odd)': {
+    borderColor: theme.palette.action.hover,
+  },
+  '&:last-child td, &:last-child th': {
+    border: 0,
+  },
+}));
+
 type RunePopupProps = {
   itemName: string,
   fullItemName: string,
@@ -85,16 +94,6 @@ export default function RunePopup({
     runewordData = { ...runewordData, ...runewordsMappingPl[itemType] };
   }
 
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    '&:nth-of-type(odd)': {
-      borderColor: theme.palette.action.hover,
-    },
-    // hide last border
-    '&:last-child td, &:last-child th': {
-      border: 0,
-    },
-  }));
-
   return (
     <>
       <div onClick={handleClickOpen} style={{ position: 'relative' }} data-search-result-entry="true">
@@ -106,6 +105,7 @@ export default function RunePopup({
         maxWidth="sm"
         fullWidth
       >
+        {open && <>
         <DialogTitle sx={{ m: 0, p: 2 }}>
           <PopupTitle>
             {fullItemName}
@@ -266,8 +266,10 @@ export default function RunePopup({
           </List>
         }
         </DialogContent>
+        </>}
       </BootstrapDialog>
       <Dialog open={noteOpen} fullWidth onClose={() => setNoteOpen(false)}>
+        {noteOpen && <>
         <DialogTitle>{fullItemName}</DialogTitle>
         <DialogContent>
           <TextField
@@ -285,6 +287,7 @@ export default function RunePopup({
           <Button onClick={() => setNoteOpen(false)}><Trans>Cancel</Trans></Button>
           <Button onClick={handleNoteChanged}><Trans>Save</Trans></Button>
         </DialogActions>
+        </>}
       </Dialog>
     </>  
   );
